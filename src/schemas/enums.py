@@ -1,14 +1,18 @@
-from enum import StrEnum, auto
+from enum import Enum
+
+class StrEnum(str, Enum):
+    def __str__(self):
+        return self.value
 
 class OSType(StrEnum):
-    WINDOWS = auto()
-    LINUX = auto()
-    MAC = auto()
+    WINDOWS = "windows"
+    LINUX = "linux"
+    MACOS = "macos"
 
 class BrowserType(StrEnum):
-    CHROME = auto()
-    CHROMIUM = auto()
-    EDGE = auto()
-    BRAVE = auto()
-    FIREFOX = auto()
-    SAFARI = auto()
+    CHROME = "chrome"
+    CHROMIUM = "chromium"
+    EDGE = "edge"
+    BRAVE = "brave"
+    FIREFOX = "firefox"
+    SAFARI = "safari"
