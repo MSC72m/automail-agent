@@ -1,177 +1,117 @@
 # AutoMail Agent
 
-An intelligent email automation system that uses browser automation to send emails through Gmail's web interface. Supports Chrome and Firefox browsers on Windows and Linux.
+Browser automation for Gmail email sending. Uses Playwright to control Chrome/Firefox and send emails through Gmail's web interface.
 
-## Features
+## What it does
 
-- 🌐 **Web-based Email Sending** - Uses browser automation to send emails through Gmail
-- 🔧 **Multi-browser Support** - Works with Chrome and Firefox
-- 🖥️ **Cross-platform** - Supports Windows and Linux
-- 🔒 **Smart Profile Management** - Handles browser profiles with automatic filtering
-- 🗂️ **Temporary Automation Profiles** - Creates unique temporary profiles for each session
-- 🎯 **Smart Selectors** - Adapts to different Gmail interface languages
-- 📊 **API Interface** - RESTful API for integration with other systems
-- 🔍 **Comprehensive Logging** - Detailed logging for debugging and monitoring
+- Automates Gmail through browser automation (no SMTP)
+- Creates temporary browser profiles for each session
+- Supports Chrome and Firefox on Windows/Linux
+- Provides REST API and web interface
+- Handles browser profile management automatically
 
-## Profile Management
+## Quick Setup
 
-### Automatic Profile Filtering
-- Filters out system profiles like "Default Profile", "System Profile", and "Guest Profile"
-- Shows only user-created profiles in the dropdown
-- Always includes "Default" option for basic usage
-
-### Temporary Automation Profiles
-- Creates unique temporary directories for each browser session using `tempfile.mkdtemp()`
-- Automatically cleans up after browser sessions
-- No manual directory management required
-- Copies essential login data from selected source profile
-
-### Headless Mode Restrictions
-- Default profile cannot be used in headless mode (GUI required for login)
-- Headless toggle is automatically disabled when Default profile is selected
-- Specific user profiles can be used in both headless and non-headless modes
-
-## Quick Start
-
-### Prerequisites
-
-- Python 3.8+
-- Chrome or Firefox browser installed
-- Gmail account
-
-### Installation
-
-1. Clone the repository:
+**Linux/macOS:**
 ```bash
-git clone <repository-url>
+git clone <repo-url> automail-agent
 cd automail-agent
+chmod +x setup.sh && ./setup.sh
 ```
 
-2. Install dependencies:
+**Windows:**
+```cmd
+git clone <repo-url> automail-agent
+cd automail-agent
+setup.bat
+```
+
+The setup script handles everything: virtual environment, dependencies, Playwright browsers.
+
+## Usage
+
+### Start the server
 ```bash
-pip install -r requirements.txt
+./start.sh          # Linux/macOS
+start.bat           # Windows
 ```
 
-3. Install Playwright browsers:
-```bash
-playwright install
-```
-
-### Basic Usage
-
-#### Using the API
-
-1. Start the API server:
-```bash
-python -m uvicorn src.api.app:app --reload
-```
-
-2. Send an email via API:
+### Send email via API
 ```bash
 curl -X POST "http://localhost:8000/api/v1/email/send" \
-     -H "Content-Type: application/json" \
-     -d '{
-       "recipient": "recipient@example.com",
-       "subject": "Test Email",
-       "body": "This is a test email sent via AutoMail Agent"
-     }'
+  -H "Content-Type: application/json" \
+  -d '{
+    "recipient": "test@example.com",
+    "subject": "Test",
+    "body": "Hello world"
+  }'
 ```
 
-#### Direct Usage
+### Web interface
+- **App**: http://localhost:8000
+- **API docs**: http://localhost:8000/api/docs
 
-```python
-import asyncio
-from src.browser.mailer import GmailMailer
-from src.schemas.email import EmailInput
-from src.schemas.browser import BrowserConfig
-from src.schemas.enums import BrowserType
+## How it works
 
-async def send_email():
-    email_data = EmailInput(
-        recipient="recipient@example.com",
-        subject="Test Email",
-        body="Hello from AutoMail Agent!"
-    )
-    
-    browser_config = BrowserConfig(
-        browser_name=BrowserType.CHROME,
-        headless=False,
-        profile_name="Profile 1"  # Use specific profile
-    )
-    
-    async with GmailMailer(browser_config) as mailer:
-        await mailer.connect_to_gmail()
-        success = await mailer.send_email(email_data)
-        print(f"Email sent: {success}")
+1. **Profile Management**: Creates temporary browser profiles, copies login data from your existing browser profiles
+2. **Browser Automation**: Launches Chrome/Firefox with remote debugging, connects via Playwright
+3. **Gmail Automation**: Navigates Gmail interface, fills compose form, sends email
+4. **Session Isolation**: Each run uses a fresh temporary profile
 
-asyncio.run(send_email())
+## API Endpoints
+
 ```
-
-## API Documentation
-
-### Send Email
-- **Endpoint**: `POST /api/v1/email/send`
-- **Body**: 
-  ```json
-  {
-    "recipient": "email@example.com",
-    "subject": "Email Subject",
-    "body": "Email content",
-    "profile_name": "Profile 1",
-    "headless": false
-  }
-  ```
-
-### Get Available Profiles
-- **Endpoint**: `GET /api/v1/profiles/available`
-- **Response**: List of available browser profiles (filtered)
-
-### Health Check
-- **Endpoint**: `GET /health`
-- **Response**: System health status
+POST /api/v1/email/send     # Send email
+GET  /api/v1/profiles       # List available browser profiles  
+GET  /health                # Health check
+```
 
 ## Configuration
 
-The system supports various configuration options:
+Browser profiles are automatically detected:
+- **Chrome**: `~/.config/google-chrome/` (Linux), `%LOCALAPPDATA%\Google\Chrome\User Data` (Windows)
+- **Firefox**: `~/.mozilla/firefox/` (Linux), `%APPDATA%\Mozilla\Firefox\Profiles` (Windows)
 
-### Browser Configuration
-- **Browser Type**: Chrome or Firefox
-- **Headless Mode**: Run with or without GUI (restricted for Default profile)
-- **Profile Management**: Use specific browser profiles with automatic filtering
+System profiles are filtered out automatically.
 
-### Supported Platforms
-- **Windows**: Full support for Chrome and Firefox
-- **Linux**: Full support for Chrome and Firefox
+## Requirements
+
+- Python 3.8+
+- Chrome or Firefox
+- Gmail account (must be logged in)
+
+## Manual Setup
+
+```bash
+git clone <repo-url>
+cd automail-agent
+python -m venv venv
+source venv/bin/activate  # Linux/macOS
+# venv\Scripts\activate   # Windows
+pip install -r requirements.txt
+playwright install
+python src/main.py
+```
 
 ## Architecture
 
-The system is built with a modular architecture:
+```
+src/
+├── api/           # FastAPI routes and services
+├── browser/       # Browser automation (launchers, mailer)
+├── schemas/       # Pydantic models
+└── utils/         # Logging, utilities
+```
 
-- **Browser Module**: Handles browser automation and profile management
-- **API Module**: Provides RESTful endpoints for email operations
-- **Schemas**: Data validation and type definitions
-- **Services**: Business logic for email and profile operations
+**Key components:**
+- `BrowserLauncher`: Manages browser processes and profiles
+- `GmailMailer`: Handles Gmail automation
+- `FastAPI app`: REST API interface
 
-## Technical Details
+## Notes
 
-### Profile System
-- Uses `tempfile.mkdtemp()` for automatic temporary directory creation
-- Copies essential browser data (cookies, login data, preferences) from source profiles
-- Automatically filters out system and unwanted profiles
-- No manual cleanup required - OS handles temporary directory cleanup
-
-### Browser Support
-- Chrome: Supports all user profiles, filters out system profiles
-- Firefox: Reads from `profiles.ini`, supports custom profiles
-- Both browsers create isolated automation profiles in temp directories
-**Note that FireFox is not fully tested and isn't ready to be used**
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Browser not found**: Ensure Chrome or Firefox is installed and accessible
-2. **Profile issues**: Check browser profile permissions and paths
-3. **Gmail login**: Manual login may be required on first use
-4. **Headless restrictions**: Use specific profiles for headless mode, not Default
+- Firefox support is experimental
+- Requires manual Gmail login on first use
+- Temporary profiles are cleaned up automatically
+- No credentials stored - uses browser session cookies
 
