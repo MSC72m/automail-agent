@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional
+
 from src.schemas.enums import BrowserType
 
 class BrowserProfile(BaseModel):

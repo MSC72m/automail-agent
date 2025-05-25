@@ -1,24 +1,15 @@
-"""
-Browser process managers for handling browser instances and debug ports.
-
-This module implements process management strategies for different browsers,
-handling debug port management, process lifecycle, and browser instance control.
-"""
-
-import os
-import signal
 import socket
 import subprocess
 import time
 import psutil
 from typing import Optional, List, Dict, Any
-import logging
 
 from src.browser.interfaces import IBrowserProcessManager
 from src.schemas.browser import BrowserConfig
 from src.schemas.enums import BrowserType, OSType
+from src.utils.logger import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class BaseBrowserProcessManager(IBrowserProcessManager):

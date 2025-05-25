@@ -1,11 +1,3 @@
-"""
-Browser executable finders for different operating systems and browsers.
-
-This module implements the Strategy pattern for finding browser executables
-across different platforms and browser types.
-"""
-
-import os
 import platform
 from pathlib import Path
 from typing import Optional, List

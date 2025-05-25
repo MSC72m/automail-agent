@@ -31,25 +31,25 @@ async def send_email(
     to: str = Form(...),
     subject: str = Form(...),
     body: str = Form(...),
-    headless: str = Form("true"),  # Changed to str to handle form data
+    headless: str = Form("true"),  
     browser_name: str = Form("chrome"),
     profile_name: Optional[str] = Form(None)
 ) -> EmailResponse:
     """Send an email via Gmail web interface."""
     try:
-        # Convert headless string to boolean
+        
         headless_bool = headless.lower() == "true"
         
         logger.info(f"Sending email to {to} with subject: {subject}, headless: {headless_bool}, profile: {profile_name}")
         
-        # Validate profile selection for headless mode
+        
         if headless_bool and (not profile_name or profile_name.strip() == ""):
             raise HTTPException(
                 status_code=400, 
                 detail="A specific profile must be selected when using headless mode. Default Profile is only available for non-headless mode."
             )
         
-        # Create email request
+        
         email_request = EmailRequest(
             to=to,
             subject=subject,
@@ -57,21 +57,21 @@ async def send_email(
             profile_name=profile_name
         )
         
-        # Create browser config
+        
         browser_config = BrowserConfig(
             browser_name=BrowserType(browser_name.lower()),
             headless=headless_bool,
             profile_name=profile_name
         )
         
-        # Send email
+        
         response = await email_service.send_email(
             email_request=email_request,
             headless=headless_bool,
             browser_config=browser_config
         )
         
-        # Return the response from the email service
+        
         if response.success:
             logger.info(f"Email sent successfully to {to}")
         else:
@@ -89,7 +89,7 @@ async def get_profiles(browser_name: str) -> dict:
     try:
         logger.info(f"Getting profiles for browser: {browser_name}")
         
-        # Validate browser name
+        
         try:
             browser_type = BrowserType(browser_name.lower())
         except ValueError:

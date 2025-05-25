@@ -3,11 +3,6 @@ from typing import Optional
 from enum import Enum
 from datetime import datetime
 
-class EmailPriority(str, Enum):
-    LOW = "low"
-    NORMAL = "normal"
-    HIGH = "high"
-
 class EmailInput(BaseModel):
     """Email input model for browser automation"""
     to: str = Field(..., description="Recipient email address")
@@ -19,7 +14,6 @@ class EmailRequest(BaseModel):
     to: EmailStr = Field(..., description="Recipient email address", example="recipient@example.com")
     subject: str = Field(..., min_length=1, max_length=200, description="Email subject", example="Important Meeting Tomorrow")
     body: str = Field(..., min_length=1, description="Email body content", example="Hi there,\n\nI hope this email finds you well. I wanted to reach out regarding our meeting scheduled for tomorrow at 2 PM.\n\nBest regards,\nJohn Doe")
-    priority: EmailPriority = Field(default=EmailPriority.NORMAL, description="Email priority level")
     profile_name: Optional[str] = Field(default=None, description="Browser profile to use", example="default")
 
     @validator('body')

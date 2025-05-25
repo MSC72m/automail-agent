@@ -1,4 +1,3 @@
-import os
 import logging
 from typing import List, Optional
 
@@ -6,9 +5,10 @@ from src.api.services.interfaces.profile_interface import ProfileServiceInterfac
 from src.schemas.profile import BrowserProfile, ProfileListResponse
 from src.schemas.enums import BrowserType
 from src.schemas.browser import BrowserConfig
-from src.browser.profile_managers import ProfileManagerFactory
+from src.browser.launchers import BrowserLauncher
+from src.utils.logger import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 class ProfileService(ProfileServiceInterface):
     """Profile service implementation for browser profile management"""
@@ -29,20 +29,18 @@ class ProfileService(ProfileServiceInterface):
             for bt in browser_types:
                 try:
                     browser_config = BrowserConfig(browser_name=bt, headless=False)
-                    profile_manager = ProfileManagerFactory.create_manager(browser_config)
-                    available_profiles = profile_manager.get_available_profiles()
+                    launcher = BrowserLauncher(browser_config)
+                    available_profiles = launcher.get_available_profiles()
                     
-                    for i, profile_name in enumerate(available_profiles):
-                        profile_path = profile_manager.get_profile_path(profile_name)
-                        if profile_path and os.path.exists(profile_path):
-                            profile = BrowserProfile(
-                                name=profile_name,
-                                browser_type=bt,
-                                path=profile_path,
-                                is_default=(profile_name == "Default"),
-                                description=f"{bt.value.title()} profile: {profile_name}"
-                            )
-                            profiles.append(profile)
+                    for profile_name in available_profiles:
+                        profile = BrowserProfile(
+                            name=profile_name,
+                            browser_type=bt,
+                            path=profile_name,  
+                            is_default=(profile_name.lower() in ["default", "default profile"]),
+                            description=f"{bt.value.title()} profile: {profile_name}"
+                        )
+                        profiles.append(profile)
                             
                 except Exception as e:
                     logger.warning(f"Error getting profiles for {bt}: {e}")

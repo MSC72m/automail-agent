@@ -2,7 +2,7 @@ import uvicorn
 import sys
 import os
 
-# Add the project root to Python path
+
 project_root = os.path.dirname(os.path.abspath(__file__))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
@@ -19,7 +19,7 @@ def main():
     
     try:
         uvicorn.run(
-            "src.api.app:app",  # Use import string instead of app object
+            "src.api.app:app",  
             host="0.0.0.0",
             port=8000,
             reload=True,

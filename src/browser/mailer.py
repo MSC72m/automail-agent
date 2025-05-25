@@ -1,5 +1,4 @@
-import asyncio
-from typing import Optional
+from typing import Optional, List
 from playwright.async_api import Page
 
 from src.browser.launchers import BrowserLauncher
@@ -11,8 +10,19 @@ from src.utils.logger import get_logger
 logger = get_logger(__name__)
 
 class GmailMailer:
+    """Gmail automation class for sending emails through the web interface.
+    
+    Supports Chrome and Firefox on Windows and Linux only.
+    No attachment support.
+    """
     
     def __init__(self, browser_config: Optional[BrowserConfig] = None, debug_port: int = 9222):
+        """Initialize the Gmail mailer.
+        
+        Args:
+            browser_config: Browser configuration. Defaults to Chrome non-headless.
+            debug_port: Debug port for Chrome CDP connection.
+        """
         if browser_config is None:
             browser_config = BrowserConfig(
                 browser_name=BrowserType.CHROME,
@@ -20,45 +30,70 @@ class GmailMailer:
             )
         
         self.launcher = BrowserLauncher(browser_config)
+        self.debug_port = debug_port
         self.page: Optional[Page] = None
         self._is_connected = False
     
     async def connect_to_gmail(self) -> bool:
-        """Connect to Gmail and navigate to the inbox."""
+        """Connect to Gmail and navigate to the inbox.
+        
+        Returns:
+            bool: True if successfully connected, False otherwise.
+        """
         try:
             logger.info("🚀 Connecting to Gmail...")
-           
-            # Get profile name from config, default to "Default" if not specified
-            profile_name = self.launcher.config.profile_name or "Default"
-            logger.info(f"Using profile: {profile_name}")
             
-            success = await self.launcher.launch(profile_name=profile_name, debug_port=9222)
-            if not success:
-                logger.error("Failed to launch browser")
-                return False
-                
-            self.page = await self.launcher.get_page()
+            
             if not self.page:
-                logger.error("Failed to get browser page")
-                return False
                 
-            await self.page.goto("https://gmail.com")
+                success = await self.launcher.launch(debug_port=self.debug_port)
+                if not success:
+                    logger.error("Failed to launch browser")
+                    return False
+                    
+                self.page = await self.launcher.get_page()
+                if not self.page:
+                    logger.error("Failed to get browser page")
+                    return False
+            
+            
+            logger.info("Navigating to Gmail...")
+            try:
+                
+                await self.page.goto("https://gmail.com", wait_until="networkidle", timeout=30000)
+            except Exception as e:
+                logger.warning(f"Navigation with networkidle failed: {e}")
+                try:
+                    
+                    await self.page.goto("https://gmail.com", wait_until="domcontentloaded", timeout=15000)
+                    logger.info("Navigation successful with domcontentloaded")
+                except Exception as e2:
+                    logger.warning(f"Navigation with domcontentloaded also failed: {e2}")
+                    
+                    await self.page.goto("https://gmail.com", timeout=10000)
+                    logger.info("Navigation completed without waiting")
+            
+            
             await self.page.wait_for_timeout(3000)
             
+            
             try:
+                
                 await self.page.wait_for_selector(
                     'div[role="button"][gh="cm"], input[type="email"], div[aria-label*="Compose"]',
                     timeout=10000
                 )
+                
                 
                 login_elements = await self.page.query_selector_all('input[type="email"], input[type="password"]')
                 if login_elements:
                     logger.warning("⚠️  Please log in to Gmail manually in the browser window")
                     logger.info("   Waiting for you to complete the login process...")
                     
+                    
                     await self.page.wait_for_selector(
                         'div[role="button"][gh="cm"], div[aria-label*="Compose"]',
-                        timeout=120000
+                        timeout=120000  
                     )
                     logger.info("✅ Login detected, continuing...")
                 
@@ -75,7 +110,14 @@ class GmailMailer:
             return False
     
     async def send_email(self, email_data: EmailInput) -> bool:
-        """Send an email through Gmail web interface."""
+        """Send an email through Gmail web interface.
+        
+        Args:
+            email_data: Email data containing recipient, subject, body.
+            
+        Returns:
+            bool: True if email was sent successfully, False otherwise.
+        """
         if not self._is_connected or not self.page:
             logger.error("❌ Not connected to Gmail. Call connect_to_gmail() first.")
             return False
@@ -83,17 +125,22 @@ class GmailMailer:
         try:
             logger.info(f"📧 Sending email to {email_data.to}...")
             
+            
             if not await self._click_compose():
                 return False
+            
             
             if not await self._fill_recipient(email_data.to):
                 return False
             
+            
             if not await self._fill_subject(email_data.subject):
                 return False
             
+            
             if not await self._fill_body(email_data.body):
                 return False
+            
             
             if not await self._click_send():
                 return False
@@ -112,9 +159,9 @@ class GmailMailer:
         compose_selectors = [
             'div[role="button"][gh="cm"]',
             'div[role="button"][aria-label*="Compose"]',
-            'div[role="button"][aria-label*="نوشتن"]',
-            'div[role="button"][aria-label*="Rediger"]',
-            'div[role="button"][aria-label*="Escribir"]',
+            'div[role="button"][aria-label*="نوشتن"]',  
+            'div[role="button"][aria-label*="Rediger"]',  
+            'div[role="button"][aria-label*="Escribir"]',  
             'div.T-I.T-I-KE.L3',
             'div[data-tooltip*="Compose"]',
             'div[jsaction*="dlrqf"]',
@@ -125,10 +172,12 @@ class GmailMailer:
             try:
                 logger.debug(f"  Trying compose selector {i}/{len(compose_selectors)}: {selector}")
                 
+                
                 element = await self.page.query_selector(selector)
                 if not element:
                     logger.debug(f"    ❌ Element not found")
                     continue
+                
                 
                 is_visible = await element.is_visible()
                 if not is_visible:
@@ -139,8 +188,10 @@ class GmailMailer:
                 await self.page.click(selector, timeout=3000)
                 logger.info(f"✅ Clicked compose button with selector: {selector}")
                 
+                
                 logger.debug("⏳ Waiting for compose window to load...")
                 await self.page.wait_for_timeout(3000)
+                
                 
                 logger.debug("🔍 Verifying compose window opened...")
                 compose_indicators = [
@@ -159,7 +210,7 @@ class GmailMailer:
                         continue
                 
                 logger.warning("⚠️  Compose button clicked but compose window not fully detected")
-                return True
+                return True  
                 
             except Exception as e:
                 logger.debug(f"    ❌ Failed: {str(e)[:100]}")
@@ -172,12 +223,15 @@ class GmailMailer:
         """Fill the recipient field."""
         logger.debug(f"🔍 Looking for recipient field to fill: {recipient}")
         
+        
         await self.page.wait_for_timeout(2000)
         
         recipient_selectors = [
+            
             'input[aria-label="گیرندگان در فیلد «به»"]',
             'input.agP.aFw',
             'input[id*=":tx"]',
+            
             'textarea[aria-label="To"]',
             'input[aria-label="To"]',
             'textarea[name="to"]',
@@ -188,6 +242,7 @@ class GmailMailer:
             'div[role="combobox"][aria-label*="To"]',
             'div[data-hovercard-id="to"] textarea',
             'div[data-hovercard-id="to"] input',
+            
             'input[placeholder*="To"]',
             'input[placeholder*="به"]'
         ]
@@ -196,6 +251,7 @@ class GmailMailer:
             try:
                 logger.debug(f"  Trying recipient selector {i}/{len(recipient_selectors)}: {selector}")
                 
+                
                 element = await self.page.query_selector(selector)
                 if not element:
                     logger.debug(f"    ❌ Element not found")
@@ -203,14 +259,18 @@ class GmailMailer:
                 
                 logger.debug(f"    ✅ Element found, attempting to fill...")
                 
+                
                 await self.page.click(selector, timeout=2000)
                 await self.page.wait_for_timeout(500)
+                
                 
                 await self.page.fill(selector, "")
                 await self.page.wait_for_timeout(500)
                 
+                
                 await self.page.fill(selector, recipient)
                 await self.page.wait_for_timeout(500)
+                
                 
                 value = await self.page.input_value(selector)
                 if value and recipient in value:
@@ -230,31 +290,39 @@ class GmailMailer:
         """Fill the subject field."""
         logger.debug(f"🔍 Looking for subject field to fill: {subject}")
         
+        
         await self.page.wait_for_timeout(3000)
         
         subject_selectors = [
+            
             'input[aria-label="موضوع"]',
             'input[name="subjectbox"]',
             'input.aoT',
             'input[id*=":q3"]',
+            
             'input[aria-label="Subject"]',
             'input[aria-label*="Subject"]',
             'div[aria-label="Subject"] input',
             'input[placeholder*="Subject"]',
             'input[placeholder*="subject"]',
             'input[data-hovercard-id="subject"]',
+            
             'input[placeholder*="موضوع"]'
         ]
         
+        
         logger.debug("  Trying to navigate to subject field using Tab...")
         try:
-            for tab_count in range(1, 5):
+            
+            for tab_count in range(1, 5):  
                 await self.page.keyboard.press('Tab')
                 await self.page.wait_for_timeout(500)
                 
+                
                 focused_element = await self.page.evaluate('document.activeElement')
                 if focused_element:
-                    for selector in subject_selectors[:4]:
+                    
+                    for selector in subject_selectors[:4]:  
                         try:
                             element = await self.page.query_selector(selector)
                             if element:
@@ -262,10 +330,12 @@ class GmailMailer:
                                 if is_focused:
                                     logger.debug(f"    ✅ Found focused subject field after {tab_count} Tab(s)")
                                     
+                                    
                                     await self.page.keyboard.press('Control+a')
                                     await self.page.wait_for_timeout(200)
                                     await self.page.keyboard.type(subject)
                                     await self.page.wait_for_timeout(500)
+                                    
                                     
                                     value = await self.page.input_value(selector)
                                     if value and subject in value:
@@ -276,9 +346,11 @@ class GmailMailer:
         except Exception as e:
             logger.debug(f"    Tab navigation failed: {str(e)[:50]}")
         
+        
         for i, selector in enumerate(subject_selectors, 1):
             try:
                 logger.debug(f"  Trying subject selector {i}/{len(subject_selectors)}: {selector}")
+                
                 
                 element = await self.page.query_selector(selector)
                 if not element:
@@ -287,7 +359,9 @@ class GmailMailer:
                 
                 logger.debug(f"    ✅ Element found, attempting to fill...")
                 
+                
                 success = False
+                
                 
                 try:
                     await self.page.click(selector, timeout=1000)
@@ -295,6 +369,7 @@ class GmailMailer:
                     success = True
                 except:
                     logger.debug(f"    ⚠️  Click failed, trying focus...")
+                
                 
                 if not success:
                     try:
@@ -304,6 +379,7 @@ class GmailMailer:
                     except:
                         logger.debug(f"    ⚠️  Focus failed, trying direct fill...")
                 
+                
                 if not success:
                     try:
                         await self.page.wait_for_timeout(500)
@@ -312,11 +388,14 @@ class GmailMailer:
                         logger.debug(f"    ⚠️  All focus methods failed, trying fill anyway...")
                         success = True
                 
+                
                 try:
+                    
                     await self.page.fill(selector, "")
                     await self.page.wait_for_timeout(200)
                     await self.page.fill(selector, subject)
                     await self.page.wait_for_timeout(500)
+                    
                     
                     value = await self.page.input_value(selector)
                     if value and subject in value:
@@ -324,6 +403,7 @@ class GmailMailer:
                         return True
                     else:
                         logger.debug(f"    ⚠️  Fill appeared to work but value is: '{value}'")
+                        
                         
                         try:
                             await self.page.evaluate(f'document.querySelector("{selector}").value = ""')
@@ -352,11 +432,14 @@ class GmailMailer:
         """Fill the email body."""
         logger.debug(f"🔍 Looking for body field to fill: {body[:50]}...")
         
+        
         await self.page.wait_for_timeout(2000)
         
         body_selectors = [
+            
             'div[aria-label="متن پیام"]',
             'div.Am.aiL.Al.editable.LW-avf.tS-tW',
+            
             'div[aria-label="Message Body"]',
             'div[role="textbox"][aria-label*="Message"]',
             'div[contenteditable="true"][aria-label*="Message"]',
@@ -365,18 +448,23 @@ class GmailMailer:
             'div[contenteditable="true"]',
             'div[role="textbox"]',
             'div[contenteditable="true"][role="textbox"]',
+            
             'div[contenteditable="true"].editable'
         ]
         
+        
         logger.debug("  Trying to navigate to body field using Tab...")
         try:
-            for tab_count in range(1, 4):
+            
+            for tab_count in range(1, 4):  
                 await self.page.keyboard.press('Tab')
                 await self.page.wait_for_timeout(500)
                 
+                
                 focused_element = await self.page.evaluate('document.activeElement')
                 if focused_element:
-                    for selector in body_selectors[:4]:
+                    
+                    for selector in body_selectors[:4]:  
                         try:
                             element = await self.page.query_selector(selector)
                             if element:
@@ -384,10 +472,12 @@ class GmailMailer:
                                 if is_focused:
                                     logger.debug(f"    ✅ Found focused body field after {tab_count} Tab(s)")
                                     
+                                    
                                     await self.page.keyboard.press('Control+a')
                                     await self.page.wait_for_timeout(200)
                                     await self.page.keyboard.type(body)
                                     await self.page.wait_for_timeout(500)
+                                    
                                     
                                     content = await self.page.evaluate(f'document.querySelector("{selector}").textContent || document.querySelector("{selector}").innerText')
                                     if content and body[:20] in content:
@@ -398,9 +488,11 @@ class GmailMailer:
         except Exception as e:
             logger.debug(f"    Tab navigation failed: {str(e)[:50]}")
         
+        
         for i, selector in enumerate(body_selectors, 1):
             try:
                 logger.debug(f"  Trying body selector {i}/{len(body_selectors)}: {selector}")
+                
                 
                 element = await self.page.query_selector(selector)
                 if not element:
@@ -409,7 +501,9 @@ class GmailMailer:
                 
                 logger.debug(f"    ✅ Element found, attempting to fill...")
                 
+                
                 success = False
+                
                 
                 try:
                     await self.page.click(selector, timeout=1000)
@@ -417,6 +511,7 @@ class GmailMailer:
                     success = True
                 except:
                     logger.debug(f"    ⚠️  Click failed, trying focus...")
+                
                 
                 if not success:
                     try:
@@ -426,19 +521,24 @@ class GmailMailer:
                     except:
                         logger.debug(f"    ⚠️  Focus failed, trying direct fill...")
                 
+                
                 try:
+                    
                     try:
                         await self.page.fill(selector, body)
                         await self.page.wait_for_timeout(500)
                     except:
+                        
                         try:
                             await self.page.evaluate(f'document.querySelector("{selector}").innerHTML = ""')
                             await self.page.type(selector, body, delay=20)
                             await self.page.wait_for_timeout(500)
                         except:
+                            
                             escaped_body = body.replace('"', '\\"').replace('\n', '<br>')
                             await self.page.evaluate(f'document.querySelector("{selector}").innerHTML = "{escaped_body}"')
                             await self.page.wait_for_timeout(500)
+                    
                     
                     try:
                         content = await self.page.evaluate(f'document.querySelector("{selector}").textContent || document.querySelector("{selector}").innerText')
@@ -447,6 +547,7 @@ class GmailMailer:
                             return True
                         else:
                             logger.debug(f"    ⚠️  Fill appeared to work but content is: '{content[:50] if content else 'empty'}...'")
+                            
                             
                             try:
                                 await self.page.evaluate(f'document.querySelector("{selector}").focus()')
@@ -480,15 +581,18 @@ class GmailMailer:
         logger.debug("🔍 Looking for send button...")
         
         send_selectors = [
+            
             'div[role="button"][aria-label*="ارسال"]',
             'div[aria-label="ارسال"]',
             'div[data-tooltip*="ارسال"]',
+            
             'div[role="button"][aria-label*="Send"]',
             'div[aria-label="Send"]',
             'div[data-tooltip*="Send"]',
             'div[aria-label*="Send"]',
             'div.T-I.J-J5-Ji.aoO.v7.T-I-atl.L3',
             'div[jsaction*="send"]',
+            
             'button[type="submit"]',
             'div[role="button"]:has-text("Send")',
             'div[role="button"]:has-text("ارسال")'
@@ -497,6 +601,7 @@ class GmailMailer:
         for i, selector in enumerate(send_selectors, 1):
             try:
                 logger.debug(f"  Trying send selector {i}/{len(send_selectors)}: {selector}")
+                
                 
                 element = await self.page.query_selector(selector)
                 if not element:
@@ -507,7 +612,9 @@ class GmailMailer:
                 await self.page.click(selector, timeout=3000)
                 logger.info("✅ Clicked send button")
                 
+                
                 await self.page.wait_for_timeout(3000)
+                
                 
                 success_indicators = [
                     'div[aria-label*="sent"]',
@@ -524,6 +631,7 @@ class GmailMailer:
                         return True
                     except:
                         continue
+                
                 
                 logger.info("✅ Send button clicked (assuming success)")
                 return True
@@ -542,10 +650,10 @@ class GmailMailer:
             self._is_connected = False
             logger.info("✅ Disconnected from Gmail")
     
-    def terminate(self):
+    async def terminate(self):
         """Terminate the browser completely."""
         if self.launcher:
-            self.launcher.terminate()
+            await self.launcher.terminate()
             self._is_connected = False
             logger.info("✅ Browser terminated")
     
@@ -559,7 +667,16 @@ class GmailMailer:
         await self.close()
 
 
+
 async def send_gmail(email_data: EmailInput, browser_config: Optional[BrowserConfig] = None) -> bool:
-    """Send an email through Gmail web interface."""
+    """Send an email through Gmail web interface.
+    
+    Args:
+        email_data: Email data containing recipient, subject, body, etc.
+        browser_config: Optional browser configuration.
+        
+    Returns:
+        bool: True if email was sent successfully, False otherwise.
+    """
     async with GmailMailer(browser_config) as mailer:
         return await mailer.send_email(email_data) 

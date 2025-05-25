@@ -1,5 +1,3 @@
-import asyncio
-import logging
 from datetime import datetime
 from typing import Optional
 import uuid
@@ -10,8 +8,9 @@ from src.schemas.browser import BrowserConfig
 from src.schemas.email import EmailInput
 from src.schemas.enums import BrowserType
 from src.browser.mailer import GmailMailer
+from src.utils.logger import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 class EmailService(EmailServiceInterface):
     """Email service implementation using Gmail mailer"""
@@ -52,8 +51,34 @@ class EmailService(EmailServiceInterface):
             
             try:
                 
-                connected = await mailer.connect_to_gmail()
+                profile_name = browser_config.profile_name if browser_config.profile_name else "Default"
+                logger.info(f"Launching browser with profile: {profile_name}")
+                
+                
+                connected = await mailer.launcher.launch(profile_name=profile_name)
                 if not connected:
+                    self._email_history[email_id]["status"] = "failed"
+                    return EmailResponse(
+                        success=False,
+                        message="Failed to launch browser",
+                        email_id=email_id,
+                        timestamp=timestamp
+                    )
+                
+                
+                mailer.page = await mailer.launcher.get_page()
+                if not mailer.page:
+                    self._email_history[email_id]["status"] = "failed"
+                    return EmailResponse(
+                        success=False,
+                        message="Failed to get browser page",
+                        email_id=email_id,
+                        timestamp=timestamp
+                    )
+                
+                
+                gmail_connected = await mailer.connect_to_gmail()
+                if not gmail_connected:
                     self._email_history[email_id]["status"] = "failed"
                     return EmailResponse(
                         success=False,

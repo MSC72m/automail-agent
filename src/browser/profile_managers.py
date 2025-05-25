@@ -1,10 +1,3 @@
-"""
-Browser profile managers for different browsers.
-
-This module implements profile management strategies for various browsers,
-handling profile creation, discovery, and path resolution.
-"""
-
 import platform
 from pathlib import Path
 from typing import List, Optional
@@ -19,6 +12,15 @@ class BaseBrowserProfileManager(IBrowserProfileManager):
     
     def __init__(self, config: BrowserConfig):
         self.config = config
+        
+        
+        os_type = platform.system().lower()
+        if os_type not in ["linux", "windows"]:
+            raise RuntimeError(f"Unsupported operating system: {os_type}. Only Windows and Linux are supported.")
+        
+        
+        if self.config.browser_name not in [BrowserType.CHROME, BrowserType.FIREFOX]:
+            raise RuntimeError(f"Unsupported browser: {self.config.browser_name}. Only Chrome and Firefox are supported.")
     
     def get_available_profiles(self) -> List[str]:
         raise NotImplementedError
@@ -34,8 +36,8 @@ class BaseBrowserProfileManager(IBrowserProfileManager):
         return False
 
 
-class ChromiumBasedProfileManager(BaseBrowserProfileManager):
-    """Profile manager for Chromium-based browsers (Chrome, Edge, Brave, etc.)."""
+class ChromeProfileManager(BaseBrowserProfileManager):
+    """Profile manager for Chrome browser on Windows and Linux."""
     
     def get_available_profiles(self) -> List[str]:
         config_dir = self._get_config_directory()
@@ -63,35 +65,16 @@ class ChromiumBasedProfileManager(BaseBrowserProfileManager):
         os_type = platform.system().lower()
         home = Path.home()
         
-        if self.config.browser_name == BrowserType.CHROME:
-            if os_type == "linux":
-                return home / ".config" / "google-chrome"
-            elif os_type == "darwin":
-                return home / "Library" / "Application Support" / "Google" / "Chrome"
-            elif os_type == "windows":
-                return home / "AppData" / "Local" / "Google" / "Chrome" / "User Data"
-        
-        elif self.config.browser_name == BrowserType.EDGE:
-            if os_type == "linux":
-                return home / ".config" / "microsoft-edge"
-            elif os_type == "darwin":
-                return home / "Library" / "Application Support" / "Microsoft Edge"
-            elif os_type == "windows":
-                return home / "AppData" / "Local" / "Microsoft" / "Edge" / "User Data"
-        
-        elif self.config.browser_name == BrowserType.BRAVE:
-            if os_type == "linux":
-                return home / ".config" / "BraveSoftware" / "Brave-Browser"
-            elif os_type == "darwin":
-                return home / "Library" / "Application Support" / "BraveSoftware" / "Brave-Browser"
-            elif os_type == "windows":
-                return home / "AppData" / "Local" / "BraveSoftware" / "Brave-Browser" / "User Data"
+        if os_type == "linux":
+            return home / ".config" / "google-chrome"
+        elif os_type == "windows":
+            return home / "AppData" / "Local" / "Google" / "Chrome" / "User Data"
         
         return None
 
 
 class FirefoxProfileManager(BaseBrowserProfileManager):
-    """Profile manager for Firefox browser."""
+    """Profile manager for Firefox browser on Windows and Linux."""
     
     def get_available_profiles(self) -> List[str]:
         config_dir = self._get_config_directory()
@@ -152,27 +135,14 @@ class FirefoxProfileManager(BaseBrowserProfileManager):
         
         if os_type == "linux":
             return home / ".mozilla" / "firefox"
-        elif os_type == "darwin":
-            return home / "Library" / "Application Support" / "Firefox" / "Profiles"
         elif os_type == "windows":
             return home / "AppData" / "Roaming" / "Mozilla" / "Firefox" / "Profiles"
         
         return None
 
 
-class ChromeProfileManager(ChromiumBasedProfileManager):
-    pass
-
-
-class EdgeProfileManager(ChromiumBasedProfileManager):
-    pass
-
-
-class BraveProfileManager(ChromiumBasedProfileManager):
-    pass
-
-
 class DefaultProfileManager(BaseBrowserProfileManager):
+    """Default profile manager fallback."""
     
     def get_available_profiles(self) -> List[str]:
         return ["Default"]
@@ -182,16 +152,13 @@ class DefaultProfileManager(BaseBrowserProfileManager):
 
 
 class ProfileManagerFactory:
+    """Factory for creating profile managers for supported browsers."""
     
     @classmethod
     def create_manager(cls, config: BrowserConfig) -> IBrowserProfileManager:
         if config.browser_name == BrowserType.CHROME:
             return ChromeProfileManager(config)
-        elif config.browser_name == BrowserType.EDGE:
-            return EdgeProfileManager(config)
-        elif config.browser_name == BrowserType.BRAVE:
-            return BraveProfileManager(config)
         elif config.browser_name == BrowserType.FIREFOX:
             return FirefoxProfileManager(config)
         else:
-            return DefaultProfileManager(config) 
+            raise ValueError(f"Unsupported browser: {config.browser_name}. Only Chrome and Firefox are supported.") 

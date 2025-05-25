@@ -5,14 +5,11 @@ class StrEnum(str, Enum):
         return self.value
 
 class OSType(StrEnum):
+    """Supported operating systems: Windows and Linux only."""
     WINDOWS = "windows"
     LINUX = "linux"
-    MACOS = "macos"
 
 class BrowserType(StrEnum):
+    """Supported browsers: Chrome and Firefox only."""
     CHROME = "chrome"
-    CHROMIUM = "chromium"
-    EDGE = "edge"
-    BRAVE = "brave"
     FIREFOX = "firefox"
-    SAFARI = "safari"

@@ -1,160 +1,177 @@
-# 🚀 AutoMail Agent
+# AutoMail Agent
 
-A FastAPI web application for automating Gmail through browser automation. Send emails programmatically with a beautiful web interface and REST API.
+An intelligent email automation system that uses browser automation to send emails through Gmail's web interface. Supports Chrome and Firefox browsers on Windows and Linux.
 
-## ✨ Features
+## Features
 
-- 🌐 **Beautiful Web Interface** - Modern, responsive UI for sending emails
-- 📧 **Gmail Automation** - Send emails through Gmail web interface using browser automation
-- 🔌 **REST API** - Full API for programmatic email sending
-- 📚 **Auto-generated Documentation** - Interactive API docs with Swagger UI
-- 🎯 **Email Validation** - Built-in email format and content validation
-- 📎 **Attachment Support** - Send emails with file attachments
-- 🔧 **Browser Profile Management** - Use different browser profiles
-- ⚡ **Fast & Reliable** - Built with FastAPI for high performance
+- 🌐 **Web-based Email Sending** - Uses browser automation to send emails through Gmail
+- 🔧 **Multi-browser Support** - Works with Chrome and Firefox
+- 🖥️ **Cross-platform** - Supports Windows and Linux
+- 🔒 **Smart Profile Management** - Handles browser profiles with automatic filtering
+- 🗂️ **Temporary Automation Profiles** - Creates unique temporary profiles for each session
+- 🎯 **Smart Selectors** - Adapts to different Gmail interface languages
+- 📊 **API Interface** - RESTful API for integration with other systems
+- 🔍 **Comprehensive Logging** - Detailed logging for debugging and monitoring
 
-## 🚀 Quick Start
+## Profile Management
+
+### Automatic Profile Filtering
+- Filters out system profiles like "Default Profile", "System Profile", and "Guest Profile"
+- Shows only user-created profiles in the dropdown
+- Always includes "Default" option for basic usage
+
+### Temporary Automation Profiles
+- Creates unique temporary directories for each browser session using `tempfile.mkdtemp()`
+- Automatically cleans up after browser sessions
+- No manual directory management required
+- Copies essential login data from selected source profile
+
+### Headless Mode Restrictions
+- Default profile cannot be used in headless mode (GUI required for login)
+- Headless toggle is automatically disabled when Default profile is selected
+- Specific user profiles can be used in both headless and non-headless modes
+
+## Quick Start
 
 ### Prerequisites
+
 - Python 3.8+
-- Chrome browser
+- Chrome or Firefox browser installed
 - Gmail account
 
 ### Installation
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd automail-agent
-   ```
-
-2. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Install browser support**
-   ```bash
-   playwright install
-   ```
-
-4. **Start the application**
-   ```bash
-   python main.py
-   ```
-
-5. **Open your browser**
-   Navigate to: http://localhost:8000
-
-## 🌐 Available URLs
-
-- **Web Interface**: http://localhost:8000
-- **API Documentation**: http://localhost:8000/api/docs
-- **Alternative API Docs**: http://localhost:8000/api/redoc
-- **Health Check**: http://localhost:8000/health
-
-## 📧 Usage
-
-### Web Interface
-1. Fill out the email form with recipient, subject, and body
-2. Choose priority level (Low, Normal, High)
-3. Optionally select a browser profile
-4. Add file attachments if needed
-5. Click "Send Email"
-6. Login to Gmail if prompted
-7. Watch your email get sent automatically!
-
-### API Usage
-
-**Send Email**
+1. Clone the repository:
 ```bash
-curl -X POST "http://localhost:8000/api/email/send" \
-  -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "to=recipient@example.com&subject=Hello&body=Test message&priority=normal"
+git clone <repository-url>
+cd automail-agent
 ```
-
-**Validate Email**
-```bash
-curl -X POST "http://localhost:8000/api/email/validate" \
-  -H "Content-Type: application/json" \
-  -d '{"to":"test@example.com","subject":"Test","body":"Hello World","priority":"normal"}'
-```
-
-**Get Profiles**
-```bash
-curl "http://localhost:8000/api/profiles/"
-```
-
-## 🧪 Testing
-
-Run the test suite:
-
-```bash
-# Run all tests
-pytest
-
-# Run only unit tests
-pytest tests/unit/
-
-# Run only e2e tests
-pytest tests/e2e/
-
-# Run with coverage
-pytest --cov=src
-
-# Run specific test file
-pytest tests/unit/test_email_models.py
-```
-
-## 📁 Project Structure
-
-```
-automail-agent/
-├── src/                    # Source code
-│   ├── api/               # FastAPI application
-│   │   ├── models/        # Pydantic models
-│   │   ├── routes/        # API routes
-│   │   ├── services/      # Business logic
-│   │   └── templates/     # HTML templates
-│   ├── browser/           # Browser automation
-│   └── schemas/           # Data schemas
-├── tests/                 # Test suite
-│   ├── unit/             # Unit tests
-│   ├── e2e/              # End-to-end tests
-│   └── conftest.py       # Test configuration
-├── main.py               # Application entry point
-├── requirements.txt      # Dependencies
-└── pytest.ini          # Test configuration
-```
-
-## 🔧 Configuration
-
-The application uses environment variables for configuration:
-
-- `PORT`: Server port (default: 8000)
-- `HOST`: Server host (default: 0.0.0.0)
-- `DEBUG`: Debug mode (default: False)
-
-## 🛠️ Development
-
-### Setting up development environment
-
-1. Create virtual environment:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
 
 2. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
+```bash
+pip install -r requirements.txt
+```
 
-3. Run tests:
-   ```bash
-   pytest
-   ```
+3. Install Playwright browsers:
+```bash
+playwright install
+```
 
-4. Start development server:
-   ```bash
-   python main.py
+### Basic Usage
+
+#### Using the API
+
+1. Start the API server:
+```bash
+python -m uvicorn src.api.app:app --reload
+```
+
+2. Send an email via API:
+```bash
+curl -X POST "http://localhost:8000/api/v1/email/send" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "recipient": "recipient@example.com",
+       "subject": "Test Email",
+       "body": "This is a test email sent via AutoMail Agent"
+     }'
+```
+
+#### Direct Usage
+
+```python
+import asyncio
+from src.browser.mailer import GmailMailer
+from src.schemas.email import EmailInput
+from src.schemas.browser import BrowserConfig
+from src.schemas.enums import BrowserType
+
+async def send_email():
+    email_data = EmailInput(
+        recipient="recipient@example.com",
+        subject="Test Email",
+        body="Hello from AutoMail Agent!"
+    )
+    
+    browser_config = BrowserConfig(
+        browser_name=BrowserType.CHROME,
+        headless=False,
+        profile_name="Profile 1"  # Use specific profile
+    )
+    
+    async with GmailMailer(browser_config) as mailer:
+        await mailer.connect_to_gmail()
+        success = await mailer.send_email(email_data)
+        print(f"Email sent: {success}")
+
+asyncio.run(send_email())
+```
+
+## API Documentation
+
+### Send Email
+- **Endpoint**: `POST /api/v1/email/send`
+- **Body**: 
+  ```json
+  {
+    "recipient": "email@example.com",
+    "subject": "Email Subject",
+    "body": "Email content",
+    "profile_name": "Profile 1",
+    "headless": false
+  }
+  ```
+
+### Get Available Profiles
+- **Endpoint**: `GET /api/v1/profiles/available`
+- **Response**: List of available browser profiles (filtered)
+
+### Health Check
+- **Endpoint**: `GET /health`
+- **Response**: System health status
+
+## Configuration
+
+The system supports various configuration options:
+
+### Browser Configuration
+- **Browser Type**: Chrome or Firefox
+- **Headless Mode**: Run with or without GUI (restricted for Default profile)
+- **Profile Management**: Use specific browser profiles with automatic filtering
+
+### Supported Platforms
+- **Windows**: Full support for Chrome and Firefox
+- **Linux**: Full support for Chrome and Firefox
+
+## Architecture
+
+The system is built with a modular architecture:
+
+- **Browser Module**: Handles browser automation and profile management
+- **API Module**: Provides RESTful endpoints for email operations
+- **Schemas**: Data validation and type definitions
+- **Services**: Business logic for email and profile operations
+
+## Technical Details
+
+### Profile System
+- Uses `tempfile.mkdtemp()` for automatic temporary directory creation
+- Copies essential browser data (cookies, login data, preferences) from source profiles
+- Automatically filters out system and unwanted profiles
+- No manual cleanup required - OS handles temporary directory cleanup
+
+### Browser Support
+- Chrome: Supports all user profiles, filters out system profiles
+- Firefox: Reads from `profiles.ini`, supports custom profiles
+- Both browsers create isolated automation profiles in temp directories
+**Note that FireFox is not fully tested and isn't ready to be used**
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Browser not found**: Ensure Chrome or Firefox is installed and accessible
+2. **Profile issues**: Check browser profile permissions and paths
+3. **Gmail login**: Manual login may be required on first use
+4. **Headless restrictions**: Use specific profiles for headless mode, not Default
+
