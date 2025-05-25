@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AutoMail Agent</title>
+    <title>{{ app_title }}</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="/static/style.css" rel="stylesheet">
@@ -18,8 +18,8 @@
                         <i class="fas fa-envelope text-white text-xl"></i>
                     </div>
                     <div>
-                        <h1 class="text-2xl font-bold text-white gradient-text">AutoMail Agent</h1>
-                        <p class="text-sm text-gray-300">Automated Gmail Sender</p>
+                        <h1 class="text-2xl font-bold text-white gradient-text">{{ app_title }}</h1>
+                        <p class="text-sm text-gray-300">{{ app_description }}</p>
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
@@ -135,7 +135,7 @@
                                 <p class="text-gray-400">Run browser in background (recommended for automation)</p>
                             </div>
                             <label class="toggle-switch">
-                                <input type="checkbox" id="headless" name="headless" checked>
+                                <input type="checkbox" id="headless" name="headless" {{ 'checked' if default_headless else '' }}>
                                 <span class="slider"></span>
                             </label>
                         </div>
@@ -166,39 +166,13 @@
     </footer>
 
     <script>
-        // Add event listeners
-        document.getElementById('headless').addEventListener('change', updateProfilesBasedOnHeadless);
-        document.getElementById('profile_name').addEventListener('change', updateProfilesBasedOnHeadless);
-        
-        // Load profiles on page load
-        loadProfiles().then(() => {
-            updateProfilesBasedOnHeadless(); // Initial update
-        });
-
-        // Update profile options based on headless mode and profile selection
+        // Update profile visibility based on headless mode
         function updateProfilesBasedOnHeadless() {
             const headlessCheckbox = document.getElementById('headless');
             const profileSelect = document.getElementById('profile_name');
             const isHeadless = headlessCheckbox.checked;
-            const selectedProfile = profileSelect.value;
             
-            // If Default (empty value) is selected, disable headless mode
-            if (selectedProfile === '') {
-                headlessCheckbox.checked = false;
-                headlessCheckbox.disabled = true;
-                document.querySelector('.toggle-switch').style.opacity = '0.5';
-            }
-            // If Default Profile is selected, also disable headless mode
-            else if (selectedProfile === 'Default Profile') {
-                headlessCheckbox.checked = false;
-                headlessCheckbox.disabled = true;
-                document.querySelector('.toggle-switch').style.opacity = '0.5';
-            } else {
-                headlessCheckbox.disabled = false;
-                document.querySelector('.toggle-switch').style.opacity = '1';
-            }
-            
-            // If headless mode is on, hide Default and Default Profile options
+            // Find Default and Default Profile options
             const defaultOption = profileSelect.querySelector('option[value=""]');
             const defaultProfileOption = profileSelect.querySelector('option[value="Default Profile"]');
             
@@ -344,6 +318,14 @@
                 submitBtn.innerHTML = '<i class="fas fa-paper-plane mr-3"></i>Send Email';
                 submitBtn.disabled = false;
             }
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadProfiles();
+            
+            // Add event listener for headless checkbox
+            document.getElementById('headless').addEventListener('change', updateProfilesBasedOnHeadless);
         });
     </script>
 </body>

@@ -15,17 +15,6 @@ router = APIRouter()
 email_service = EmailService()
 profile_service = ProfileService()
 
-@router.get("/", response_class=HTMLResponse)
-async def home() -> HTMLResponse:
-    """Serve the main HTML page."""
-    static_path = os.path.join(os.path.dirname(__file__), "..", "static", "index.html")
-    if os.path.exists(static_path):
-        with open(static_path, "r", encoding="utf-8") as f:
-            content = f.read()
-        return HTMLResponse(content=content)
-    else:
-        return HTMLResponse(content="<h1>Email Service</h1><p>Static file not found</p>")
-
 @router.post("/send-email", response_model=EmailResponse)
 async def send_email(
     to: str = Form(...),

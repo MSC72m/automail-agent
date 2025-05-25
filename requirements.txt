@@ -3,6 +3,7 @@ uvicorn
 jinja2
 python-multipart
 pydantic[email]
+pydantic-settings
 email-validator
 playwright
 aiofiles

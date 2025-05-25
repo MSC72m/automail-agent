@@ -2,32 +2,42 @@ import uvicorn
 import sys
 import os
 
+# Add project root to path
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
+from src.schemas.config import config
+from src.utils.logger import setup_logging, get_logger
+
 def main():
     """Main entry point for the AutoMail Agent application."""
-    print("🚀 Starting AutoMail Agent...")
+    # Setup logging first
+    setup_logging()
+    logger = get_logger(__name__)
+    
+    logger.info("🚀 Starting AutoMail Agent...")
     print("=" * 50)
     print("📧 AutoMail Agent - Gmail Automation Web Interface")
-    print("🌐 Web Interface: http://localhost:8000")
-    print("📚 API Documentation: http://localhost:8000/api/docs")
-    print("🔍 Health Check: http://localhost:8000/health")
+    print(f"🌐 Web Interface: http://{config.host}:{config.port}")
+    print(f"📚 API Documentation: http://{config.host}:{config.port}/docs")
+    print(f"🔍 Health Check: http://{config.host}:{config.port}/health")
+    print(f"🔧 Environment: {config.environment.value}")
+    print(f"📊 Log Level: {config.log_level.value}")
     print("=" * 50)
     
     try:
         uvicorn.run(
             "src.api.app:app",  
-            host="0.0.0.0",
-            port=8000,
-            reload=True,
-            log_level="info"
+            host=config.host,
+            port=config.port,
+            reload=config.reload,
+            log_level=config.log_level.value.lower()
         )
     except KeyboardInterrupt:
-        print("\n👋 Shutting down AutoMail Agent...")
+        logger.info("👋 Shutting down AutoMail Agent...")
     except Exception as e:
-        print(f"❌ Error starting server: {e}")
+        logger.error(f"❌ Error starting server: {e}")
         sys.exit(1)
 
 if __name__ == "__main__":

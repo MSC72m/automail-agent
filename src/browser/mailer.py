@@ -6,6 +6,7 @@ from src.schemas.browser import BrowserConfig
 from src.schemas.email import EmailInput
 from src.schemas.enums import BrowserType
 from src.utils.logger import get_logger
+from src.schemas.config import config
 
 logger = get_logger(__name__)
 
@@ -60,17 +61,17 @@ class GmailMailer:
             logger.info("Navigating to Gmail...")
             try:
                 
-                await self.page.goto("https://gmail.com", wait_until="networkidle", timeout=30000)
+                await self.page.goto("https://gmail.com", wait_until="networkidle", timeout=config.browser_timeout)
             except Exception as e:
                 logger.warning(f"Navigation with networkidle failed: {e}")
                 try:
                     
-                    await self.page.goto("https://gmail.com", wait_until="domcontentloaded", timeout=15000)
+                    await self.page.goto("https://gmail.com", wait_until="domcontentloaded", timeout=config.browser_timeout // 2)
                     logger.info("Navigation successful with domcontentloaded")
                 except Exception as e2:
                     logger.warning(f"Navigation with domcontentloaded also failed: {e2}")
                     
-                    await self.page.goto("https://gmail.com", timeout=10000)
+                    await self.page.goto("https://gmail.com", timeout=config.browser_timeout // 3)
                     logger.info("Navigation completed without waiting")
             
             

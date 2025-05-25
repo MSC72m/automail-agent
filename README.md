@@ -83,6 +83,36 @@ GET  /health                # Health check
 
 ## Configuration
 
+### Environment Variables
+
+AutoMail Agent uses a unified configuration system with environment variables. Copy `.env.example` to `.env` and modify as needed:
+
+```bash
+cp .env.example .env
+```
+
+#### Server Configuration
+- `HOST` - Server host (default: `0.0.0.0`)
+- `PORT` - Server port (default: `8000`)
+- `RELOAD` - Enable auto-reload in development (default: `true`)
+- `ENVIRONMENT` - Application environment: `development`, `production`, `testing` (default: `development`)
+
+#### Logging Configuration
+- `LOG_LEVEL` - Log level: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL` (default: `INFO`)
+- `LOG_FORMAT` - Log format string (default: `%(asctime)s - %(name)s - %(levelname)s - %(message)s`)
+- `LOG_DATE_FORMAT` - Log date format (default: `%Y-%m-%d %H:%M:%S`)
+
+#### API Configuration
+- `API_TITLE` - API title (default: `AutoMail Agent API`)
+- `API_DESCRIPTION` - API description
+- `API_VERSION` - API version (default: `1.0.0`)
+
+#### Browser Configuration
+- `BROWSER_TIMEOUT` - Browser timeout in milliseconds (default: `30000`)
+- `HEADLESS` - Run browser in headless mode (default: `false`)
+
+### Browser Profile Detection
+
 Browser profiles are automatically detected:
 - **Chrome**: `~/.config/google-chrome/` (Linux), `%LOCALAPPDATA%\Google\Chrome\User Data` (Windows)
 - **Firefox**: `~/.mozilla/firefox/` (Linux), `%APPDATA%\Mozilla\Firefox\Profiles` (Windows)
@@ -104,6 +134,11 @@ python -m venv venv
 source venv/bin/activate  # Linux/macOS
 # venv\Scripts\activate   # Windows
 pip install -r requirements.txt
+
+# Copy and configure environment variables
+cp .env.example .env
+# Edit .env as needed
+
 python src/main.py
 ```
 
