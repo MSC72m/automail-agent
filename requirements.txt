@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+jinja2
+python-multipart
+pydantic[email]
+email-validator
+playwright
+aiofiles
+python-dotenv
+requests
+pytest
+pytest-asyncio
+psutil
