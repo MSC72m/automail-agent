@@ -37,8 +37,7 @@ class EmailService(EmailServiceInterface):
             email_input = EmailInput(
                 to=str(email_request.to),
                 subject=email_request.subject,
-                body=email_request.body,
-                attachments=email_request.attachments
+                body=email_request.body
             )
             
             

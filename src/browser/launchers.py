@@ -75,8 +75,13 @@ class BrowserLauncher(IBrowserLauncher):
             logger.debug(f"Found browser executable: {executable_path}")
             
             
-            profile_path = self.profile_manager.create_profile_if_needed(profile_name)
-            logger.debug(f"Using profile path: {profile_path}")
+            # Get the actual profile path (don't create new, use existing)
+            profile_path = self.profile_manager.get_profile_path(profile_name)
+            if not profile_path:
+                logger.error(f"Could not find profile '{profile_name}' for {self.config.browser_name}")
+                return False
+            
+            logger.debug(f"Using existing profile path: {profile_path}")
             
             
             if debug_port is None:

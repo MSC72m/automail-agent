@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field
+from typing import Optional
 from sys import platform
 
 from src.schemas.enums import OSType, BrowserType
@@ -11,6 +12,10 @@ class BrowserConfig(BaseModel):
     headless: bool = Field(
         default=True,
         description="Whether to run the browser in headless mode.",
+    )
+    profile_name: Optional[str] = Field(
+        default=None,
+        description="The name of the browser profile to use.",
     )
 
     @property

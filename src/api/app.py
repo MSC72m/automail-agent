@@ -11,8 +11,8 @@ app = FastAPI(
     title="AutoMail Agent API",
     description="A beautiful web interface for sending emails through Gmail automation",
     version="1.0.0",
-    docs_url="/api/docs",
-    redoc_url="/api/redoc"
+    docs_url="/docs",
+    redoc_url="/redoc"
 )
 
 static_dir = os.path.join(os.path.dirname(__file__), "static")
@@ -20,7 +20,9 @@ os.makedirs(static_dir, exist_ok=True)
 
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
-app.include_router(email_router, prefix="/api")
+# Include email routes without prefix for direct access from HTML
+app.include_router(email_router)
+# Include profile routes with /api prefix for API access
 app.include_router(profile_router, prefix="/api")
 
 def get_profile_service() -> ProfileService:

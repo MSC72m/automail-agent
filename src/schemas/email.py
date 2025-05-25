@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field, EmailStr, validator
 from typing import Optional
 from enum import Enum
+from datetime import datetime
 
 class EmailPriority(str, Enum):
     LOW = "low"
@@ -32,7 +33,7 @@ class EmailResponse(BaseModel):
     success: bool = Field(..., description="Whether the email was sent successfully")
     message: str = Field(..., description="Response message")
     email_id: Optional[str] = Field(default=None, description="Email ID if available")
-    timestamp: str = Field(..., description="Timestamp of the operation")
+    timestamp: str = Field(default_factory=lambda: datetime.now().isoformat(), description="Timestamp of the operation")
 
 class EmailStatus(BaseModel):
     """Email status model"""

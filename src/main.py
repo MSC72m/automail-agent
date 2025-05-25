@@ -2,8 +2,10 @@ import uvicorn
 import sys
 import os
 
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+# Add the project root to Python path
+project_root = os.path.dirname(os.path.abspath(__file__))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 
 def main():
     """Main entry point for the AutoMail Agent application."""
@@ -16,13 +18,11 @@ def main():
     print("=" * 50)
     
     try:
-        from src.api.app import app
-        
         uvicorn.run(
-            app,
+            "src.api.app:app",  # Use import string instead of app object
             host="0.0.0.0",
             port=8000,
-            reload=False,
+            reload=True,
             log_level="info"
         )
     except KeyboardInterrupt:
