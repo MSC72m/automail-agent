@@ -1,57 +1,66 @@
 # AutoMail Agent
 
-Browser automation for Gmail email sending. Uses Playwright to control Chrome/Firefox and send emails through Gmail's web interface.
+A lightweight web API for automated email sending through Gmail using browser automation. Leverages existing browser sessions to send emails without storing credentials.
 
-## What it does
+## Quick Start
 
-- Automates Gmail through browser automation (no SMTP)
-- Creates temporary browser profiles for each session
-- Supports Chrome and Firefox on Windows/Linux
-- Provides REST API and web interface
-- Handles browser profile management automatically
-
-## Quick Setup
-
-**Linux/macOS:**
+### Linux/macOS
 ```bash
-git clone <repo-url> automail-agent
-cd automail-agent
-chmod +x setup.sh && ./setup.sh
+curl -sSL https://raw.githubusercontent.com/your-repo/automail-agent/main/setup.sh | bash
 ```
 
-**Windows:**
+### Windows
 ```cmd
-git clone <repo-url> automail-agent
-cd automail-agent
-setup.bat
+curl -sSL https://raw.githubusercontent.com/your-repo/automail-agent/main/setup.bat -o setup.bat && setup.bat
 ```
 
-The setup script handles everything: virtual environment, dependencies, Playwright browsers.
+### Docker
+```bash
+# Production mode
+docker-compose up
+
+# Development mode  
+docker-compose --profile dev up automail-agent-dev
+
+# Background
+docker-compose up -d
+
+# Stop
+docker-compose down
+```
 
 ## Usage
 
-### Start the server
+### Native
 ```bash
-./start.sh          # Linux/macOS
-start.bat           # Windows
+# Start server
+./start.sh        # Linux/macOS
+start.bat         # Windows
+
+# API available at http://localhost:8000
 ```
 
-### Send email via API
+### Docker
 ```bash
-curl -X POST "http://localhost:8000/api/v1/email/send" \
+# Start in production mode
+docker-compose up
+
+# Start in development mode (with live reload)
+docker-compose --profile dev up automail-agent-dev
+```
+
+**Send Email:**
+```bash
+curl -X POST http://localhost:8000/api/v1/email/send \
   -H "Content-Type: application/json" \
   -d '{
-    "recipient": "test@example.com",
-    "subject": "Test",
-    "body": "Hello world"
+    "to": "recipient@example.com",
+    "subject": "Test Email",
+    "body": "Hello from AutoMail Agent!"
   }'
 ```
 
-### Web interface
-- **App**: http://localhost:8000
-- **API docs**: http://localhost:8000/api/docs
-
-## How it works
+## How It Works
 
 1. **Profile Management**: Creates temporary browser profiles, copies login data from your existing browser profiles
 2. **Browser Automation**: Launches Chrome/Firefox with remote debugging, connects via Playwright
@@ -89,9 +98,18 @@ python -m venv venv
 source venv/bin/activate  # Linux/macOS
 # venv\Scripts\activate   # Windows
 pip install -r requirements.txt
-playwright install
 python src/main.py
 ```
+
+## Docker Details
+
+The Docker setup includes:
+- **Multi-stage build** for optimized images
+- **Volume persistence** for data
+- **Development mode** with live reload
+
+Ports:
+- `8000`: API server
 
 ## Architecture
 

@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  # Headless mode (default) - for server environments
+  automail-headless:
+    build: .
+    container_name: automail-agent-headless
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount host browser profiles (read-only for security)
+      - ~/.config/google-chrome:/home/app/.config/google-chrome:ro
+      - ~/.mozilla/firefox:/home/app/.mozilla/firefox:ro
+      # Data persistence
+      - ./data:/home/app/data
+      - ./logs:/home/app/logs
+    environment:
+      - DISPLAY=:99
+      - BROWSER_HEADLESS=true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Development mode with live reload
+  automail-dev:
+    build:
+      context: .
+      target: development
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - ./data:/app/data
+    environment:
+      - PYTHONUNBUFFERED=1
+      - FLASK_ENV=development
+    command: python src/main.py --reload
+    restart: unless-stopped
+    profiles:
+      - dev 
