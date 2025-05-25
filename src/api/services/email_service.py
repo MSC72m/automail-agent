@@ -108,8 +108,7 @@ class EmailService(EmailServiceInterface):
                     )
                     
             finally:
-                
-                await mailer.close()
+                await mailer.terminate()
                 
         except Exception as e:
             logger.error(f"Error sending email: {e}")

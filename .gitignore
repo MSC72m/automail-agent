@@ -157,3 +157,6 @@ Desktop.ini
 *.zip
 *.tar
 *.log
+
+# Docker
+docker-compose.override.yml

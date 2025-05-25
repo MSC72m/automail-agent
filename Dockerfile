@@ -1,12 +1,38 @@
 # Multi-stage build for AutoMail Agent
-FROM python:3.11-slim as base
+FROM python:3.11-bookworm as base
 
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies for running browsers from host
 RUN apt-get update && apt-get install -y \
     curl \
+    xvfb \
+    fonts-liberation \
+    libasound2 \
+    libatk-bridge2.0-0 \
+    libatk1.0-0 \
+    libatspi2.0-0 \
+    libdrm2 \
+    libgtk-3-0 \
+    libnspr4 \
+    libnss3 \
+    libx11-xcb1 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxrandr2 \
+    libxss1 \
+    libxtst6 \
+    libgconf-2-4 \
+    libxfixes3 \
+    libxinerama1 \
+    libxrandr2 \
+    libasound2-dev \
+    libpangocairo-1.0-0 \
+    libatk1.0-dev \
+    libcairo-gobject2 \
+    libgtk-3-dev \
+    libgdk-pixbuf2.0-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
@@ -14,6 +40,9 @@ COPY requirements.txt .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Install Playwright browsers (these will be used if host browsers aren't available)
+RUN playwright install chromium
 
 # Production stage
 FROM base as production
