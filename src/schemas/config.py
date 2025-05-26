@@ -29,6 +29,10 @@ class AppConfig(BaseSettings):
         default="%Y-%m-%d %H:%M:%S",
         description="Log date format"
     )
+    log_file: str = Field(
+        default="logs/automail.log",
+        description="Log file path"
+    )
     
     # Browser Configuration
     browser_timeout: int = Field(default=30000, description="Browser timeout in milliseconds")
@@ -42,3 +46,5 @@ class AppConfig(BaseSettings):
 
 # Global configuration instance
 config = AppConfig() 
+
+print(config.log_file)

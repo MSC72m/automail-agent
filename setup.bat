@@ -43,7 +43,6 @@ echo [SUCCESS] Python dependencies installed
 
 REM Set up basic permissions
 echo [INFO] Setting up permissions...
-if not exist "data" mkdir data >nul 2>&1
 if not exist "logs" mkdir logs >nul 2>&1
 icacls . /grant %USERNAME%:F >nul 2>&1
 echo [SUCCESS] Permissions configured

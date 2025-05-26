@@ -10,7 +10,6 @@ services:
     network_mode: host
     volumes:
       # Data persistence (basic mounts, browsers will be added by setup script)
-      - ./data:/home/app/data
       - ./logs:/home/app/logs
     environment:
       - DISPLAY=${DISPLAY:-:0}
@@ -31,7 +30,6 @@ services:
     network_mode: host
     volumes:
       - .:/app
-      - ./data:/app/data
     environment:
       - PYTHONUNBUFFERED=1
       - FLASK_ENV=development

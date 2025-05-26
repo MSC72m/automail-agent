@@ -118,8 +118,6 @@ automail-agent/
 │   ├── utils/            # Utilities and logging
 │   │   └── logger.py
 │   └── agents/           # Agent implementations
-├── data/                 # Data storage (created by setup)
-├── logs/                 # Application logs (created by setup)
 └── venv/                 # Virtual environment (created by setup)
 ```
 
@@ -182,5 +180,5 @@ python3 -m main
 
 ### Logs
 
-Check logs for detailed error information in the `logs/` directory.
+Application logs are automatically created in the `logs/` directory when the application starts.
 

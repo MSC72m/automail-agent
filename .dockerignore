@@ -78,7 +78,6 @@ setup.sh
 setup.bat
 
 # Data directories (if they contain user data)
-data/
 profiles/
 temp/
 

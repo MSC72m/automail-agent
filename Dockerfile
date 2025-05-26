@@ -50,7 +50,6 @@ FROM base as production
 # Copy application code
 COPY src/ ./src/
 COPY main.py ./
-COPY data/ ./data/
 
 # Create non-root user
 RUN useradd -m -u 1000 app && chown -R app:app /app

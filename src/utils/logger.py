@@ -1,8 +1,10 @@
 import logging
 import sys
+import os
+from pathlib import Path
 from typing import Optional, Dict
-from src.schemas.config import config
 
+from src.schemas.config import config
 
 class LoggerManager:
     """Manages logger configuration and state."""
@@ -15,16 +17,20 @@ class LoggerManager:
         """Setup logging configuration once."""
         if self._setup_complete:
             return
-            
+        
+        log_file_path = Path(config.log_file.split("/")[0])
+        log_file_path.parent.mkdir(parents=True, exist_ok=True)
+        
         # Configure root logger
         logging.basicConfig(
             level=getattr(logging, config.log_level.value),
             format=config.log_format,
             datefmt=config.log_date_format,
             handlers=[
-                logging.StreamHandler(sys.stdout)
+                logging.StreamHandler(sys.stdout),
+                logging.FileHandler(config.log_file, encoding='utf-8')
             ],
-            force=True  # Override any existing configuration
+            force=True  
         )
         
         self._setup_complete = True
@@ -75,6 +81,3 @@ def get_logger(name: str, level: Optional[str] = None) -> logging.Logger:
     """
     return _logger_manager.get_logger(name, level)
 
-
-# Default logger for backward compatibility
-default_logger = get_logger("automail") 
