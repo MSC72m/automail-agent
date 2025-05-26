@@ -1,132 +1,10 @@
 # AutoMail Agent
 
-A lightweight web API for automated email sending through Gmail using browser automation. Leverages existing browser sessions to send emails without storing credentials.
+A web application for automated email sending through Gmail using browser automation. Features a clean web interface and API for sending emails without storing credentials.
 
 ## Quick Start
 
-### Linux/macOS
-```bash
-curl -sSL https://raw.githubusercontent.com/your-repo/automail-agent/main/setup.sh | bash
-```
-
-### Windows
-```cmd
-curl -sSL https://raw.githubusercontent.com/your-repo/automail-agent/main/setup.bat -o setup.bat && setup.bat
-```
-
-### Docker
-```bash
-# IMPORTANT: Run setup script first to detect your browsers
-./setup-docker.sh
-
-# Then start the application
-docker-compose up --build
-
-# Development mode  
-docker-compose --profile dev up automail-dev
-
-# Background
-docker-compose up -d
-
-# Stop
-docker-compose down
-```
-
-## Usage
-
-### Native
-```bash
-# Start server
-./start.sh        # Linux/macOS
-start.bat         # Windows
-
-# API available at http://localhost:8000
-```
-
-### Docker
-```bash
-# STEP 1: Setup browser detection (required)
-./setup-docker.sh
-
-# STEP 2: Start in production mode
-docker-compose up --build
-
-# Start in development mode (with live reload)
-docker-compose --profile dev up automail-dev
-```
-
-**Send Email:**
-```bash
-curl -X POST http://localhost:8000/api/v1/email/send \
-  -H "Content-Type: application/json" \
-  -d '{
-    "to": "recipient@example.com",
-    "subject": "Test Email",
-    "body": "Hello from AutoMail Agent!"
-  }'
-```
-
-## How It Works
-
-1. **Profile Management**: Creates temporary browser profiles, copies login data from your existing browser profiles
-2. **Browser Automation**: Launches Chrome/Firefox with remote debugging, connects via Playwright
-3. **Gmail Automation**: Navigates Gmail interface, fills compose form, sends email
-4. **Session Isolation**: Each run uses a fresh temporary profile
-
-## API Endpoints
-
-```
-POST /api/v1/email/send     # Send email
-GET  /api/v1/profiles       # List available browser profiles  
-GET  /health                # Health check
-```
-
-## Configuration
-
-### Environment Variables
-
-AutoMail Agent uses a unified configuration system with environment variables. Copy `.env.example` to `.env` and modify as needed:
-
-```bash
-cp .env.example .env
-```
-
-#### Server Configuration
-- `HOST` - Server host (default: `0.0.0.0`)
-- `PORT` - Server port (default: `8000`)
-- `RELOAD` - Enable auto-reload in development (default: `true`)
-- `ENVIRONMENT` - Application environment: `development`, `production`, `testing` (default: `development`)
-
-#### Logging Configuration
-- `LOG_LEVEL` - Log level: `DEBUG`, `INFO`, `WARNING`, `ERROR`, `CRITICAL` (default: `INFO`)
-- `LOG_FORMAT` - Log format string (default: `%(asctime)s - %(name)s - %(levelname)s - %(message)s`)
-- `LOG_DATE_FORMAT` - Log date format (default: `%Y-%m-%d %H:%M:%S`)
-
-#### API Configuration
-- `API_TITLE` - API title (default: `AutoMail Agent API`)
-- `API_DESCRIPTION` - API description
-- `API_VERSION` - API version (default: `1.0.0`)
-
-#### Browser Configuration
-- `BROWSER_TIMEOUT` - Browser timeout in milliseconds (default: `30000`)
-- `HEADLESS` - Run browser in headless mode (default: `false`)
-
-### Browser Profile Detection
-
-Browser profiles are automatically detected:
-- **Chrome**: `~/.config/google-chrome/` (Linux), `%LOCALAPPDATA%\Google\Chrome\User Data` (Windows)
-- **Firefox**: `~/.mozilla/firefox/` (Linux), `%APPDATA%\Mozilla\Firefox\Profiles` (Windows)
-
-System profiles are filtered out automatically.
-
-## Requirements
-
-- Python 3.8+
-- Chrome or Firefox
-- Gmail account (must be logged in)
-
-## Manual Setup
-
+### 1. Clone and Setup
 ```bash
 git clone <repo-url>
 cd automail-agent
@@ -134,95 +12,173 @@ python -m venv venv
 source venv/bin/activate  # Linux/macOS
 # venv\Scripts\activate   # Windows
 pip install -r requirements.txt
+```
 
-# Copy and configure environment variables
+### 2. Configure
+```bash
 cp .env.example .env
-# Edit .env as needed
+# Edit .env if needed (defaults work for most cases)
+```
 
+### 3. Run
+```bash
 python src/main.py
 ```
 
-## Docker Details
+Visit `http://localhost:8000` to use the web interface or send API requests.
 
-### Why the setup-docker.sh Script?
+## Features
 
-The `setup-docker.sh` script is **essential** for Docker deployment because:
+- **Web Interface**: Clean, modern UI for sending emails
+- **API Endpoints**: RESTful API for programmatic access
+- **Browser Automation**: Uses your existing Gmail sessions
+- **Profile Management**: Automatically detects browser profiles
+- **Configuration**: Unified config system with environment variables
+- **No Credentials**: Leverages existing browser sessions
 
-1. **Dynamic Browser Detection**: Different systems have browsers installed in different locations
-   - Some have Chrome at `/usr/bin/google-chrome`
-   - Others have Chromium at `/usr/bin/chromium` 
-   - Some use Snap packages at `/snap/bin/chromium`
-   - Firefox might be at `/usr/bin/firefox` or `/usr/bin/firefox-esr`
+## How It Works
 
-2. **Profile Location Variance**: Browser profiles are stored in different paths per user
-   - Chrome: `~/.config/google-chrome/` (varies by user)
-   - Firefox: `~/.mozilla/firefox/` (varies by user)
+1. **Profile Detection**: Automatically finds your Chrome/Firefox profiles
+2. **Session Reuse**: Uses your existing Gmail login sessions
+3. **Browser Automation**: Launches browser with Playwright, navigates Gmail
+4. **Email Sending**: Fills compose form and sends email
+5. **Clean Isolation**: Each operation uses temporary profiles
 
-3. **Avoiding Mount Errors**: Docker fails if you try to mount files/directories that don't exist
-   - Static docker-compose.yml would break on systems missing certain browsers
-   - The script only mounts what actually exists on your system
+## Web Interface
 
-### How setup-docker.sh Works
+Access the web interface at `http://localhost:8000`:
 
+- **Send Email**: Simple form to compose and send emails
+- **Profile Selection**: Choose from detected browser profiles
+- **Headless Mode**: Option to run browser in background
+- **Real-time Feedback**: Status updates and error messages
+
+## API Usage
+
+### Send Email
 ```bash
-./setup-docker.sh
+curl -X POST http://localhost:8000/send-email \
+  -F "to=recipient@example.com" \
+  -F "subject=Test Email" \
+  -F "body=Hello from AutoMail Agent!" \
+  -F "headless=true" \
+  -F "browser_name=chrome" \
+  -F "profile_name=Profile 1"
 ```
 
-The script:
-1. **Scans** your system for installed browsers (`google-chrome`, `chromium`, `firefox`, etc.)
-2. **Detects** your browser profile directories (`~/.config/google-chrome`, `~/.mozilla/firefox`)
-3. **Generates** a `docker-compose.override.yml` file with only the browsers/profiles found
-4. **Mounts** your host browsers and profiles into the container so the app can use your existing Gmail sessions
-
-**Example output:**
-```
-🔍 Detecting available browsers on host system...
-
-🌐 Checking for browser executables...
-✅ Found: /usr/bin/google-chrome
-❌ Not found: /usr/bin/chromium
-✅ Found: /usr/bin/firefox
-
-📁 Checking for browser profiles...
-✅ Found profile: /home/user/.config/google-chrome
-✅ Found profile: /home/user/.mozilla/firefox
-
-✅ Docker setup complete!
-📄 Created: docker-compose.override.yml
+### Get Browser Profiles
+```bash
+curl http://localhost:8000/profiles/chrome
 ```
 
-### Docker Architecture
+### Health Check
+```bash
+curl http://localhost:8000/health
+```
 
-The Docker setup includes:
-- **Multi-stage build** for optimized images
-- **Host browser mounting** for using your existing browser sessions
-- **Volume persistence** for data
-- **Development mode** with live reload
-- **Network host mode** to avoid networking issues
+## Configuration
 
-Ports:
-- `8000`: API server
+The application uses a unified configuration system. All settings can be configured via environment variables in `.env`:
 
-## Architecture
+### Application Settings
+```env
+# Server
+HOST=0.0.0.0
+PORT=8000
+ENVIRONMENT=development
+
+# Application
+APP_TITLE=AutoMail Agent
+APP_DESCRIPTION=Automated email sending through Gmail
+
+# Browser
+BROWSER_TIMEOUT=30000
+HEADLESS=false
+
+# Logging
+LOG_LEVEL=INFO
+```
+
+### Browser Profile Detection
+
+Profiles are automatically detected from:
+- **Chrome**: `~/.config/google-chrome/` (Linux), `%LOCALAPPDATA%\Google\Chrome\User Data` (Windows)
+- **Firefox**: `~/.mozilla/firefox/` (Linux), `%APPDATA%\Mozilla\Firefox\Profiles` (Windows)
+
+## Project Structure
 
 ```
 src/
-├── api/           # FastAPI routes and services
-├── browser/       # Browser automation (launchers, mailer)
-├── schemas/       # Pydantic models
-└── utils/         # Logging, utilities
+├── main.py              # Application entry point
+├── api/                 # Web interface and API
+│   ├── app.py          # FastAPI application
+│   ├── routes/         # API endpoints
+│   ├── services/       # Business logic
+│   └── templates/      # Jinja2 templates
+├── browser/            # Browser automation
+├── schemas/            # Data models and configuration
+├── utils/              # Utilities and logging
+└── config/             # Configuration management
 ```
 
-**Key components:**
-- `BrowserLauncher`: Manages browser processes and profiles
-- `GmailMailer`: Handles Gmail automation
-- `FastAPI app`: REST API interface
+## Requirements
 
-## Notes
+- Python 3.8+
+- Chrome or Firefox browser
+- Gmail account (must be logged in to browser)
 
-- **Docker users**: Always run `./setup-docker.sh` before `docker-compose up`
-- Firefox support is experimental
-- Requires manual Gmail login on first use
-- Temporary profiles are cleaned up automatically
-- No credentials stored - uses browser session cookies
+## Docker Support
+
+### Quick Docker Setup
+```bash
+# Setup browser detection (required)
+./setup-docker.sh
+
+# Start application
+docker-compose up --build
+
+# Development mode with live reload
+docker-compose --profile dev up automail-dev
+```
+
+### Why setup-docker.sh?
+
+The setup script is essential because:
+- **Dynamic Detection**: Finds browsers installed on your system
+- **Profile Mounting**: Locates your browser profiles for session reuse
+- **Compatibility**: Works across different Linux distributions and setups
+- **Error Prevention**: Only mounts what exists, preventing Docker errors
+
+## Development
+
+### Running in Development Mode
+```bash
+# With auto-reload
+ENVIRONMENT=development python src/main.py
+
+# Or with Docker
+docker-compose --profile dev up automail-dev
+```
+
+### Environment Variables
+- `ENVIRONMENT=development` enables auto-reload and debug logging
+- `LOG_LEVEL=DEBUG` for detailed logging
+- `HEADLESS=false` to see browser automation
+
+## Troubleshooting
+
+### Common Issues
+
+1. **"Static file not found"**: Restart the application, conflicting routes have been fixed
+2. **No profiles found**: Ensure Chrome/Firefox is installed and you're logged into Gmail
+3. **Browser timeout**: Increase `BROWSER_TIMEOUT` in `.env`
+4. **Permission errors**: Ensure browser profile directories are readable
+
+### Logs
+
+Check logs for detailed error information:
+```bash
+# Application logs show browser automation steps
+# Set LOG_LEVEL=DEBUG for verbose output
+```
 
