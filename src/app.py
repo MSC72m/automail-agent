@@ -6,9 +6,9 @@ import os
 
 from src.schemas.config import config
 from src.utils.logger import get_logger
-from src.api.routes.email_routes import router as email_router
-from src.api.routes.profile_routes import router as profile_router
-from src.api.services.profile_service import ProfileService
+from src.routes.email_routes import router as email_router
+from src.routes.profile_routes import router as profile_router
+from src.services.profile_service import ProfileService
 
 # Setup logger
 logger = get_logger(__name__)

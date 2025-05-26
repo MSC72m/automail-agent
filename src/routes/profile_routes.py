@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, Query
 from typing import Optional
 
 from src.schemas.profile import ProfileListResponse, BrowserProfile
-from src.api.services.profile_service import ProfileService
+from src.services.profile_service import ProfileService
 from src.schemas.enums import BrowserType
 
 router = APIRouter(prefix="/profiles", tags=["profiles"])

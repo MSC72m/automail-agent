@@ -49,6 +49,7 @@ FROM base as production
 
 # Copy application code
 COPY src/ ./src/
+COPY main.py ./
 COPY data/ ./data/
 
 # Create non-root user
@@ -63,7 +64,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
 # Start the application
-CMD ["python", "src/main.py"]
+CMD ["python", "main.py"]
 
 # Development stage
 FROM base as development
@@ -82,4 +83,4 @@ USER app
 EXPOSE 8000
 
 # Start with reload for development
-CMD ["python", "src/main.py", "--reload"] 
+CMD ["python", "main.py", "--reload"] 

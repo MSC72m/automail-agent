@@ -58,7 +58,7 @@ print_success "Dependencies installed"
 cat > start.sh << 'EOF'
 #!/bin/bash
 source venv/bin/activate
-python src/main.py
+python main.py
 EOF
 chmod +x start.sh
 
@@ -72,5 +72,5 @@ echo -n "Start now? (y/N): "
 read -r START_NOW
 
 if [ "$START_NOW" = "y" ] || [ "$START_NOW" = "Y" ]; then
-    python src/main.py
+    python main.py
 fi 

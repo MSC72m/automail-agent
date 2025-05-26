@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional
 import uuid
 
-from src.api.services.interfaces.email_interface import EmailServiceInterface
+from src.services.interfaces.email_interface import EmailServiceInterface
 from src.schemas.email import EmailRequest, EmailResponse
 from src.schemas.browser import BrowserConfig
 from src.schemas.email import EmailInput

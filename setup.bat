@@ -45,7 +45,7 @@ REM Create start script
 (
 echo @echo off
 echo call venv\Scripts\activate.bat
-echo python src\main.py
+echo python main.py
 echo pause
 ) > start.bat
 
@@ -58,7 +58,7 @@ REM Ask to start now
 set /p "START_NOW=Start now? (y/N): "
 
 if /i "%START_NOW%"=="y" (
-    python src\main.py
+    python main.py
 ) else (
     pause
 )

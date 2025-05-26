@@ -3,8 +3,8 @@ from fastapi.responses import HTMLResponse, FileResponse
 from typing import Optional, List
 import os
 
-from src.api.services.email_service import EmailService
-from src.api.services.profile_service import ProfileService
+from src.services.email_service import EmailService
+from src.services.profile_service import ProfileService
 from src.schemas.email import EmailRequest, EmailResponse
 from src.schemas.browser import BrowserConfig
 from src.schemas.enums import BrowserType

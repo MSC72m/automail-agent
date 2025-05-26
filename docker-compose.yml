@@ -36,7 +36,7 @@ services:
       - PYTHONUNBUFFERED=1
       - FLASK_ENV=development
       - DISPLAY=${DISPLAY:-:0}
-    command: python src/main.py --reload
+    command: python main.py --reload
     restart: unless-stopped
     profiles:
       - dev 

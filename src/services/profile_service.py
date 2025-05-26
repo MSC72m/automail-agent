@@ -1,7 +1,6 @@
-import logging
-from typing import List, Optional
+from typing import Optional
 
-from src.api.services.interfaces.profile_interface import ProfileServiceInterface
+from src.services.interfaces.profile_interface import ProfileServiceInterface
 from src.schemas.profile import BrowserProfile, ProfileListResponse
 from src.schemas.enums import BrowserType
 from src.schemas.browser import BrowserConfig

@@ -1,28 +1,29 @@
 # AutoMail Agent
 
-A web application for automated email sending through Gmail using browser automation. Features a clean web interface and API for sending emails without storing credentials.
+A beautiful web interface for sending emails through Gmail automation using browser sessions.
 
 ## Quick Start
 
-### 1. Clone and Setup
+### 1. Setup
 ```bash
-git clone https://github.com/MSC72m/automail-agent.git
-cd automail-agent
-python -m venv venv
-source venv/bin/activate  # Linux/macOS
-# venv\Scripts\activate   # Windows
-pip install -r requirements.txt
+# Linux/Mac
+./setup.sh
+
+# Windows
+setup.bat
 ```
 
-### 2. Configure
+### 2. Configure (Optional)
 ```bash
+# Copy example environment file
 cp .env.example .env
+
 # Edit .env if needed (defaults work for most cases)
 ```
 
 ### 3. Run
 ```bash
-python src/main.py
+python main.py
 ```
 
 Visit `http://localhost:8000` to use the web interface or send API requests.
@@ -108,17 +109,23 @@ Profiles are automatically detected from:
 ## Project Structure
 
 ```
-src/
+automail-agent/
 ├── main.py              # Application entry point
-├── api/                 # Web interface and API
+├── src/                 # Source code
 │   ├── app.py          # FastAPI application
 │   ├── routes/         # API endpoints
 │   ├── services/       # Business logic
-│   └── templates/      # Jinja2 templates
-├── browser/            # Browser automation
-├── schemas/            # Data models and configuration
-├── utils/              # Utilities and logging
-└── config/             # Configuration management
+│   ├── static/         # Static files (CSS, JS)
+│   ├── templates/      # Jinja2 templates
+│   ├── browser/        # Browser automation
+│   ├── schemas/        # Data models and configuration
+│   ├── utils/          # Utilities and logging
+│   └── agents/         # Agent implementations
+├── data/               # Data storage
+├── logs/               # Application logs
+├── setup.sh            # Linux/Mac setup script
+├── setup.bat           # Windows setup script
+└── setup-docker.sh     # Docker setup script
 ```
 
 ## Requirements
@@ -154,7 +161,7 @@ The setup script is essential because:
 ### Running in Development Mode
 ```bash
 # With auto-reload
-ENVIRONMENT=development python src/main.py
+ENVIRONMENT=development python main.py
 
 # Or with Docker
 docker-compose --profile dev up automail-dev
