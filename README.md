@@ -6,7 +6,7 @@ A web application for automated email sending through Gmail using browser automa
 
 ### 1. Clone and Setup
 ```bash
-git clone <repo-url>
+git clone https://github.com/MSC72m/automail-agent.git
 cd automail-agent
 python -m venv venv
 source venv/bin/activate  # Linux/macOS
