@@ -2,7 +2,7 @@ from typing import Optional, List
 from playwright.async_api import Page
 
 from src.browser.interfaces.mailer_interfaces import IMailer
-from src.browser.launchers import BrowserLauncher
+from src.browser.lunchers import BrowserLauncher
 from src.schemas.browser import BrowserConfig
 from src.schemas.email import EmailInput
 from src.schemas.enums import BrowserType

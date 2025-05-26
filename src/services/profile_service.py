@@ -4,7 +4,7 @@ from src.services.interfaces.profile_interface import ProfileServiceInterface
 from src.schemas.profile import BrowserProfile, ProfileListResponse
 from src.schemas.enums import BrowserType
 from src.schemas.browser import BrowserConfig
-from src.browser.launchers import BrowserLauncher
+from src.browser.profile_manager import ProfileManager
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -12,8 +12,10 @@ logger = get_logger(__name__)
 class ProfileService(ProfileServiceInterface):
     """Profile service implementation for browser profile management"""
     
-    def __init__(self):
+    def __init__(self, browser_config: BrowserConfig):
         self._cached_profiles = {}
+        self.browser_config = browser_config
+        self.profile_manager = ProfileManager(browser_config)
     
     async def get_available_profiles(self, browser_type: Optional[BrowserType] = None) -> ProfileListResponse:
         """Get list of available browser profiles"""
@@ -27,11 +29,8 @@ class ProfileService(ProfileServiceInterface):
             
             for bt in browser_types:
                 try:
-                    browser_config = BrowserConfig(browser_name=bt, headless=False)
-                    launcher = BrowserLauncher(browser_config)
-                    available_profiles = launcher.get_available_profiles()
                     
-                    for profile_name in available_profiles:
+                    for profile_name in self.profile_manager.get_available_profiles():
                         profile = BrowserProfile(
                             name=profile_name,
                             browser_type=bt,

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Form, UploadFile, File
+from fastapi import APIRouter, HTTPException, Form, UploadFile, File, Depends
 from fastapi.responses import HTMLResponse, FileResponse
 from typing import Optional, List
 import os
@@ -8,12 +8,11 @@ from src.services.profile_service import ProfileService
 from src.schemas.email import EmailRequest, EmailResponse
 from src.schemas.browser import BrowserConfig
 from src.schemas.enums import BrowserType
+from src.dependencies import get_email_service, get_profile_service
 from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
 router = APIRouter()
-email_service = EmailService()
-profile_service = ProfileService()
 
 @router.post("/send-email", response_model=EmailResponse)
 async def send_email(
@@ -22,7 +21,8 @@ async def send_email(
     body: str = Form(...),
     headless: str = Form("true"),  
     browser_name: str = Form("chrome"),
-    profile_name: Optional[str] = Form(None)
+    profile_name: Optional[str] = Form(None),
+    email_service: EmailService = Depends(get_email_service)
 ) -> EmailResponse:
     """Send an email via Gmail web interface."""
     try:
@@ -73,7 +73,10 @@ async def send_email(
         raise HTTPException(status_code=500, detail=f"Error sending email: {str(e)}")
 
 @router.get("/profiles/{browser_name}")
-async def get_profiles(browser_name: str) -> dict:
+async def get_profiles(
+    browser_name: str,
+    profile_service: ProfileService = Depends(get_profile_service)
+) -> dict:
     """Get available browser profiles for the specified browser."""
     try:
         logger.info(f"Getting profiles for browser: {browser_name}")
@@ -98,12 +101,15 @@ async def get_profiles(browser_name: str) -> dict:
         raise HTTPException(status_code=500, detail=f"Error getting profiles: {str(e)}")
 
 @router.get("/email-status/{email_id}")
-async def get_email_status(email_id: str) -> dict:
+async def get_email_status(
+    email_id: str,
+    email_service: EmailService = Depends(get_email_service)
+) -> dict:
     """Get the status of a sent email."""
     try:
-        status = email_service.get_email_status(email_id)
+        status = await email_service.get_email_status(email_id)
         if status:
-            return status
+            return {"email_id": email_id, "status": status}
         else:
             raise HTTPException(status_code=404, detail="Email not found")
     except Exception as e:

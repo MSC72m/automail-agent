@@ -4,12 +4,9 @@ from typing import Optional
 from src.schemas.profile import ProfileListResponse, BrowserProfile
 from src.services.profile_service import ProfileService
 from src.schemas.enums import BrowserType
+from src.dependencies import get_profile_service
 
 router = APIRouter(prefix="/profiles", tags=["profiles"])
-
-
-def get_profile_service() -> ProfileService:
-    return ProfileService()
 
 @router.get("/", response_model=ProfileListResponse)
 async def get_profiles(
