@@ -9,6 +9,7 @@ import tempfile
 from typing import Optional, List
 from playwright.async_api import async_playwright, Browser, BrowserContext, Page
 
+from src.browser.interfaces.lunchers_interfaces import IBrowserLauncher
 from src.schemas.browser import BrowserConfig
 from src.schemas.enums import BrowserType, OSType
 from src.utils.logger import get_logger
@@ -16,7 +17,7 @@ from src.utils.logger import get_logger
 logger = get_logger(__name__)
 
 
-class BrowserLauncher:
+class BrowserLauncher(IBrowserLauncher):
     """
     Simplified browser launcher that works like the original luncher.py.
     

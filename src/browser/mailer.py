@@ -1,6 +1,7 @@
 from typing import Optional, List
 from playwright.async_api import Page
 
+from src.browser.interfaces.mailer_interfaces import IMailer
 from src.browser.launchers import BrowserLauncher
 from src.schemas.browser import BrowserConfig
 from src.schemas.email import EmailInput
@@ -10,7 +11,7 @@ from src.schemas.config import config
 
 logger = get_logger(__name__)
 
-class GmailMailer:
+class GmailMailer(IMailer):
     """Gmail automation class for sending emails through the web interface.
     
     Supports Chrome and Firefox on Windows and Linux only.
@@ -667,17 +668,3 @@ class GmailMailer:
         """Async context manager exit."""
         await self.terminate()
 
-
-
-async def send_gmail(email_data: EmailInput, browser_config: Optional[BrowserConfig] = None) -> bool:
-    """Send an email through Gmail web interface.
-    
-    Args:
-        email_data: Email data containing recipient, subject, body, etc.
-        browser_config: Optional browser configuration.
-        
-    Returns:
-        bool: True if email was sent successfully, False otherwise.
-    """
-    async with GmailMailer(browser_config) as mailer:
-        return await mailer.send_email(email_data) 
