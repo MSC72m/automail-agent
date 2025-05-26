@@ -36,31 +36,27 @@ if exist "venv" (
 call venv\Scripts\activate.bat
 echo [SUCCESS] Virtual environment created
 
-echo [INFO] Installing dependencies...
+echo [INFO] Installing Python dependencies...
 python -m pip install --upgrade pip
 pip install -r requirements.txt
-echo [SUCCESS] Dependencies installed
+echo [SUCCESS] Python dependencies installed
 
-REM Create start script
+REM Set up basic permissions
+echo [INFO] Setting up permissions...
+if not exist "data" mkdir data >nul 2>&1
+if not exist "logs" mkdir logs >nul 2>&1
+icacls . /grant %USERNAME%:F >nul 2>&1
+echo [SUCCESS] Permissions configured
+
+REM Create simple start script
 (
 echo @echo off
 echo call venv\Scripts\activate.bat
-echo python main.py
-echo pause
+echo python -m main
 ) > start.bat
 
-echo.
 echo [SUCCESS] Setup complete!
-echo Run: start.bat
-echo API: http://localhost:8000
-
-REM Ask to start now
-set /p "START_NOW=Start now? (y/N): "
-
-if /i "%START_NOW%"=="y" (
-    python main.py
-) else (
-    pause
-)
+echo Run: start.bat or python -m main (after activating venv)
+pause
 
 endlocal 

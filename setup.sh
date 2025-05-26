@@ -49,28 +49,32 @@ $PYTHON_CMD -m venv venv
 source venv/bin/activate
 print_success "Virtual environment created"
 
-print_info "Installing dependencies..."
+print_info "Installing Python dependencies..."
 pip install --upgrade pip
 pip install -r requirements.txt
-print_success "Dependencies installed"
+print_success "Python dependencies installed"
 
-# Create start script
+
+# Set up basic permissions
+print_info "Setting up permissions..."
+if [ -d "$HOME/.cache/ms-playwright" ]; then
+    chmod -R 755 "$HOME/.cache/ms-playwright" 2>/dev/null || true
+fi
+
+# Allow X11 access if display exists
+if [ -n "$DISPLAY" ]; then
+    xhost +local: >/dev/null 2>&1 || true
+fi
+
+print_success "Permissions configured"
+
+# Create simple start script
 cat > start.sh << 'EOF'
 #!/bin/bash
 source venv/bin/activate
-python main.py
+python3 -m main
 EOF
 chmod +x start.sh
 
-echo ""
 print_success "Setup complete!"
-echo "Run: ./start.sh"
-echo "API: http://localhost:8000"
-
-# Ask to start now
-echo -n "Start now? (y/N): "
-read -r START_NOW
-
-if [ "$START_NOW" = "y" ] || [ "$START_NOW" = "Y" ]; then
-    python main.py
-fi 
+echo "Run: ./start.sh or python3 -m main (after activating venv)" 

@@ -58,7 +58,8 @@ class ProfileManager(IProfileManager):
                         preferences_file = os.path.join(profile_path, "Preferences")
                         if os.path.exists(preferences_file):
                             excluded_profiles = [
-                                "System Profile", "Guest Profile", "BrowserMetrics-spare.pma"
+                                "System Profile", "Guest Profile", "BrowserMetrics-spare.pma", "Automation Profile",
+                                "AutomationProfile"
                             ]
                             
                             if (item not in excluded_profiles and 

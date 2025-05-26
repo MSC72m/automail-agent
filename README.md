@@ -13,17 +13,15 @@ A beautiful web interface for sending emails through Gmail automation using brow
 setup.bat
 ```
 
-### 2. Configure (Optional)
+### 2. Run
 ```bash
-# Copy example environment file
-cp .env.example .env
+# Activate virtual environment first
+source venv/bin/activate  # Linux/Mac
+# or
+venv\Scripts\activate.bat  # Windows
 
-# Edit .env if needed (defaults work for most cases)
-```
-
-### 3. Run
-```bash
-python main.py
+# Then run the application
+python3 -m main
 ```
 
 Visit `http://localhost:8000` to use the web interface or send API requests.
@@ -32,9 +30,8 @@ Visit `http://localhost:8000` to use the web interface or send API requests.
 
 - **Web Interface**: Clean, modern UI for sending emails
 - **API Endpoints**: RESTful API for programmatic access
-- **Browser Automation**: Uses your existing Gmail sessions
+- **Browser Automation**: Uses your existing Gmail sessions with Playwright
 - **Profile Management**: Automatically detects browser profiles
-- **Configuration**: Unified config system with environment variables
 - **No Credentials**: Leverages existing browser sessions
 
 ## How It Works
@@ -77,30 +74,7 @@ curl http://localhost:8000/profiles/chrome
 curl http://localhost:8000/health
 ```
 
-## Configuration
-
-The application uses a unified configuration system. All settings can be configured via environment variables in `.env`:
-
-### Application Settings
-```env
-# Server
-HOST=0.0.0.0
-PORT=8000
-ENVIRONMENT=development
-
-# Application
-APP_TITLE=AutoMail Agent
-APP_DESCRIPTION=Automated email sending through Gmail
-
-# Browser
-BROWSER_TIMEOUT=30000
-HEADLESS=false
-
-# Logging
-LOG_LEVEL=INFO
-```
-
-### Browser Profile Detection
+## Browser Profile Detection
 
 Profiles are automatically detected from:
 - **Chrome**: `~/.config/google-chrome/` (Linux), `%LOCALAPPDATA%\Google\Chrome\User Data` (Windows)
@@ -110,22 +84,43 @@ Profiles are automatically detected from:
 
 ```
 automail-agent/
-├── main.py              # Application entry point
-├── src/                 # Source code
-│   ├── app.py          # FastAPI application
-│   ├── routes/         # API endpoints
-│   ├── services/       # Business logic
-│   ├── static/         # Static files (CSS, JS)
-│   ├── templates/      # Jinja2 templates
-│   ├── browser/        # Browser automation
-│   ├── schemas/        # Data models and configuration
-│   ├── utils/          # Utilities and logging
-│   └── agents/         # Agent implementations
-├── data/               # Data storage
-├── logs/               # Application logs
-├── setup.sh            # Linux/Mac setup script
-├── setup.bat           # Windows setup script
-└── setup-docker.sh     # Docker setup script
+├── main.py                 # Application entry point
+├── requirements.txt        # Python dependencies
+├── setup.sh               # Linux/Mac setup script
+├── setup.bat              # Windows setup script
+├── start.sh               # Linux/Mac start script (created by setup)
+├── start.bat              # Windows start script (created by setup)
+├── .env.example           # Environment variables template
+├── docker-compose.yml     # Docker configuration
+├── Dockerfile             # Docker image definition
+├── src/                   # Source code
+│   ├── app.py            # FastAPI application
+│   ├── dependencies.py   # Dependency injection
+│   ├── routes/           # API endpoints
+│   │   ├── email_routes.py
+│   │   └── profile_routes.py
+│   ├── services/         # Business logic
+│   │   ├── email_service.py
+│   │   └── profile_service.py
+│   ├── browser/          # Browser automation
+│   │   ├── lunchers.py   # Browser launcher
+│   │   ├── mailer.py     # Gmail automation
+│   │   ├── finders.py    # Browser detection
+│   │   └── profile_manager.py
+│   ├── schemas/          # Data models and configuration
+│   │   ├── config.py     # Application configuration
+│   │   ├── browser.py    # Browser configuration
+│   │   ├── email.py      # Email models
+│   │   └── enums.py      # Enumerations
+│   ├── static/           # Static files (CSS, JS)
+│   ├── templates/        # Jinja2 templates
+│   │   └── index.html
+│   ├── utils/            # Utilities and logging
+│   │   └── logger.py
+│   └── agents/           # Agent implementations
+├── data/                 # Data storage (created by setup)
+├── logs/                 # Application logs (created by setup)
+└── venv/                 # Virtual environment (created by setup)
 ```
 
 ## Requirements
@@ -133,6 +128,14 @@ automail-agent/
 - Python 3.8+
 - Chrome or Firefox browser
 - Gmail account (must be logged in to browser)
+
+## Setup Details
+
+The setup scripts automatically:
+- Create a Python virtual environment
+- Install all Python dependencies including Playwright
+- Set up proper permissions for browser automation
+- Create start scripts for easy launching
 
 ## Docker Support
 
@@ -160,32 +163,24 @@ The setup script is essential because:
 
 ### Running in Development Mode
 ```bash
-# With auto-reload
-ENVIRONMENT=development python main.py
+# Activate virtual environment
+source venv/bin/activate
 
-# Or with Docker
-docker-compose --profile dev up automail-dev
+# Run the application
+python3 -m main
 ```
-
-### Environment Variables
-- `ENVIRONMENT=development` enables auto-reload and debug logging
-- `LOG_LEVEL=DEBUG` for detailed logging
-- `HEADLESS=false` to see browser automation
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **"Static file not found"**: Restart the application, conflicting routes have been fixed
+1. **"Module not found"**: Make sure virtual environment is activated (`source venv/bin/activate`)
 2. **No profiles found**: Ensure Chrome/Firefox is installed and you're logged into Gmail
-3. **Browser timeout**: Increase `BROWSER_TIMEOUT` in `.env`
-4. **Permission errors**: Ensure browser profile directories are readable
+3. **Browser timeout**: Check your internet connection and Gmail login status
+4. **Permission errors**: Re-run setup script or ensure browser profile directories are readable
+5. **Playwright browser not found**: Run `playwright install` in activated virtual environment
 
 ### Logs
 
-Check logs for detailed error information:
-```bash
-# Application logs show browser automation steps
-# Set LOG_LEVEL=DEBUG for verbose output
-```
+Check logs for detailed error information in the `logs/` directory.
 
