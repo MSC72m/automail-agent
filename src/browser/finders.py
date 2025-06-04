@@ -1,12 +1,12 @@
-from typing import Optional, List
-import subprocess
 import os
+import platform
+import subprocess
+from typing import Optional, List
 
-from src.browser.interfaces.finders_interfaces import IBrowserFinder
+from src.core.logger import get_logger
+from src.core.wsl_helper import is_wsl
 from src.schemas.browser import BrowserConfig
-from src.schemas.enums import BrowserType, OSType
-from src.utils.logger import get_logger
-from src.utils.wsl_helper import is_wsl
+from core.enums import BrowserType, OSType
 
 logger = get_logger(__name__)
 

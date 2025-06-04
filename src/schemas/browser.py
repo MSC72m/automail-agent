@@ -1,8 +1,10 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 from typing import Optional
-from sys import platform
+import os
+import platform
 
-from src.schemas.enums import OSType, BrowserType
+from src.core.wsl_helper import is_wsl
+from core.enums import BrowserType, OSType
 
 class BrowserConfig(BaseModel):
     """Configuration for browser automation."""
@@ -29,3 +31,12 @@ class BrowserConfig(BaseModel):
                 return OSType.WINDOWS
             case _:
                 raise ValueError(f"Unsupported OS: {platform}")
+    
+    @property
+    def home(self) -> str:
+        return os.path.expanduser("~")
+
+    @property
+    def is_wsl(self) -> bool:
+        return is_wsl()
+

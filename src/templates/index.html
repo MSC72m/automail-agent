@@ -203,9 +203,9 @@
                 profileSelect.innerHTML = '<option value="">Loading...</option>';
                 
                 const response = await fetch(`/profiles/${selectedBrowser}`);
-                const data = await response.json();
 
                 if (response.ok) {
+                    const data = await response.json();
                     profileSelect.innerHTML = '<option value="" selected>Default</option>';
                     
                     if (data.profiles && data.profiles.length > 0) {
@@ -226,12 +226,32 @@
                     // Update profile visibility based on headless mode
                     updateProfilesBasedOnHeadless();
                 } else {
-                    profileSelect.innerHTML = '<option value="">Error loading profiles</option>';
-                    console.error('Error loading profiles:', data.detail);
+                    // Handle error responses with different status codes
+                    let errorMessage = 'Error loading profiles';
+                    
+                    try {
+                        const errorData = await response.json();
+                        errorMessage = errorData.detail || errorData.message || errorMessage;
+                    } catch (parseError) {
+                        // If we can't parse the error response, use default message
+                        if (response.status === 400) {
+                            errorMessage = 'Invalid browser type';
+                        } else if (response.status === 404) {
+                            errorMessage = 'Profiles not found';
+                        } else if (response.status === 500) {
+                            errorMessage = 'Server error loading profiles';
+                        } else {
+                            errorMessage = `Error loading profiles (${response.status})`;
+                        }
+                    }
+                    
+                    profileSelect.innerHTML = `<option value="">⚠️ ${errorMessage}</option>`;
+                    console.error('Error loading profiles:', response.status, errorMessage);
                 }
             } catch (error) {
-                profileSelect.innerHTML = '<option value="">Error loading profiles</option>';
-                console.error('Error loading profiles:', error);
+                // Network or other errors
+                profileSelect.innerHTML = '<option value="">⚠️ Network error</option>';
+                console.error('Network error loading profiles:', error);
             }
         }
 
@@ -267,20 +287,27 @@
                     body: formData
                 });
                 
-                const result = await response.json();
+                // Parse response body (for both success and error cases)
+                let result;
+                try {
+                    result = await response.json();
+                } catch (parseError) {
+                    result = { message: 'Failed to parse server response' };
+                }
                 
                 // Show status message
                 statusContainer.classList.remove('hidden');
                 statusContainer.classList.add('fade-in');
                 
-                if (response.ok && result.success) {
+                if (response.ok) {
+                    // Success (2xx status codes)
                     statusMessage.className = 'glass-effect p-6 rounded-xl border border-green-500 bg-green-900/20';
                     statusMessage.innerHTML = `
                         <div class="flex items-center text-green-300">
                             <i class="fas fa-check-circle mr-3 text-2xl"></i>
                             <div>
                                 <h3 class="text-lg font-semibold">Email Sent Successfully!</h3>
-                                <p class="text-green-400 mt-1">${result.message}</p>
+                                <p class="text-green-400 mt-1">${result.message || 'Email sent successfully'}</p>
                             </div>
                         </div>
                     `;
@@ -289,18 +316,42 @@
                     this.reset();
                     loadProfiles(); // Reload profiles for default browser
                 } else {
+                    // Error (4xx or 5xx status codes)
+                    let errorTitle = 'Email Failed to Send';
+                    let errorIcon = 'fas fa-exclamation-circle';
+                    
+                    // Customize error message based on status code
+                    if (response.status === 400) {
+                        errorTitle = 'Invalid Request';
+                        errorIcon = 'fas fa-exclamation-triangle';
+                    } else if (response.status === 502) {
+                        errorTitle = 'Gmail Connection Failed';
+                        errorIcon = 'fas fa-wifi';
+                    } else if (response.status === 503) {
+                        errorTitle = 'Service Temporarily Unavailable';
+                        errorIcon = 'fas fa-tools';
+                    } else if (response.status === 404) {
+                        errorTitle = 'Profile Not Found';
+                        errorIcon = 'fas fa-user-slash';
+                    } else if (response.status >= 500) {
+                        errorTitle = 'Server Error';
+                        errorIcon = 'fas fa-server';
+                    }
+                    
                     statusMessage.className = 'glass-effect p-6 rounded-xl border border-red-500 bg-red-900/20';
                     statusMessage.innerHTML = `
                         <div class="flex items-center text-red-300">
-                            <i class="fas fa-exclamation-circle mr-3 text-2xl"></i>
+                            <i class="${errorIcon} mr-3 text-2xl"></i>
                             <div>
-                                <h3 class="text-lg font-semibold">Email Failed to Send</h3>
-                                <p class="text-red-400 mt-1">${result.message || 'Failed to send email'}</p>
+                                <h3 class="text-lg font-semibold">${errorTitle}</h3>
+                                <p class="text-red-400 mt-1">${result.detail || result.message || 'An error occurred while sending the email'}</p>
+                                <p class="text-red-500 text-sm mt-1">Status: ${response.status}</p>
                             </div>
                         </div>
                     `;
                 }
             } catch (error) {
+                // Network or other JavaScript errors
                 statusContainer.classList.remove('hidden');
                 statusContainer.classList.add('fade-in');
                 statusMessage.className = 'glass-effect p-6 rounded-xl border border-red-500 bg-red-900/20';

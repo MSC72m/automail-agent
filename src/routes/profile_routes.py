@@ -3,8 +3,9 @@ from typing import Optional
 
 from src.schemas.profile import ProfileListResponse, BrowserProfile
 from src.services.profile_service import ProfileService
-from src.schemas.enums import BrowserType
-from src.dependencies import get_profile_service
+from core.enums import BrowserType
+from src.core.dependencies import get_profile_service
+from src.core.exceptions import ProfileException
 
 router = APIRouter(prefix="/profiles", tags=["profiles"])
 
@@ -18,6 +19,9 @@ async def get_profiles(
         profiles = await profile_service.get_available_profiles(browser_type)
         return profiles
         
+    except ProfileException as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
+    
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
@@ -30,13 +34,11 @@ async def get_profile_by_name(
     """Get a specific profile by name and browser type"""
     try:
         profile = await profile_service.get_profile_by_name(profile_name, browser_type)
-        if profile is None:
-            raise HTTPException(status_code=404, detail="Profile not found")
-        
         return profile
         
-    except HTTPException:
-        raise
+    except ProfileException as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
+    
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
@@ -48,13 +50,11 @@ async def get_default_profile(
     """Get the default profile for a browser type"""
     try:
         profile = await profile_service.get_default_profile(browser_type)
-        if profile is None:
-            raise HTTPException(status_code=404, detail="No default profile found")
-        
         return profile
         
-    except HTTPException:
-        raise
+    except ProfileException as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
+    
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
@@ -69,5 +69,8 @@ async def validate_profile(
         exists = await profile_service.validate_profile_exists(profile_name, browser_type)
         return {"exists": exists, "profile_name": profile_name, "browser_type": browser_type}
         
+    except ProfileException as e:
+        raise HTTPException(status_code=e.status_code, detail=e.message)
+    
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}") 

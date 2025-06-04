@@ -1,14 +1,14 @@
-from fastapi import FastAPI, Request, Depends
+from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import os
 
 from src.schemas.config import config
-from src.utils.logger import get_logger
+from src.core.logger import get_logger
 from src.routes.email_routes import router as email_router
 from src.routes.profile_routes import router as profile_router
-from src.dependencies import get_profile_service
+from src.core.dependencies import get_profile_service
 
 logger = get_logger(__name__)
 

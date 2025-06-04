@@ -13,8 +13,8 @@ from src.browser.interfaces.lunchers_interfaces import IBrowserLauncher
 from src.browser.finders import BrowserFinder
 from src.browser.profile_manager import ProfileManager
 from src.schemas.browser import BrowserConfig
-from src.schemas.enums import BrowserType
-from src.utils.logger import get_logger
+from core.enums import BrowserType
+from src.core.logger import get_logger
 
 logger = get_logger(__name__)
 

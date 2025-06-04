@@ -1,7 +1,7 @@
 from pydantic import Field
 from pydantic_settings import BaseSettings
 
-from src.schemas.enums import LogLevel, Environment
+from core.enums import LogLevel, Environment
 
 
 class AppConfig(BaseSettings):

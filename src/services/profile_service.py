@@ -2,10 +2,11 @@ from typing import Optional
 
 from src.services.interfaces.profile_interface import ProfileServiceInterface
 from src.schemas.profile import BrowserProfile, ProfileListResponse
-from src.schemas.enums import BrowserType
+from core.enums import BrowserType
 from src.schemas.browser import BrowserConfig
 from src.browser.profile_manager import ProfileManager
-from src.utils.logger import get_logger
+from src.core.logger import get_logger
+from src.core.exceptions import ProfileException
 
 logger = get_logger(__name__)
 
@@ -29,7 +30,7 @@ class ProfileService(ProfileServiceInterface):
             
             for bt in browser_types:
                 try:
-                    
+                    # Get profiles from profile manager
                     for profile_name in self.profile_manager.get_available_profiles():
                         profile = BrowserProfile(
                             name=profile_name,
@@ -44,6 +45,7 @@ class ProfileService(ProfileServiceInterface):
                     logger.warning(f"Error getting profiles for {bt}: {e}")
                     continue
             
+            # If no profiles found, create default ones
             if not profiles:
                 for bt in browser_types:
                     default_profile = BrowserProfile(
@@ -62,7 +64,7 @@ class ProfileService(ProfileServiceInterface):
             
         except Exception as e:
             logger.error(f"Error getting available profiles: {e}")
-            return ProfileListResponse(profiles=[], total_count=0)
+            raise ProfileException(f"Failed to retrieve browser profiles: {str(e)}", 500)
     
     async def get_profile_by_name(self, profile_name: str, browser_type: BrowserType) -> Optional[BrowserProfile]:
         """Get a specific profile by name and browser type"""
@@ -73,36 +75,51 @@ class ProfileService(ProfileServiceInterface):
                 if profile.name == profile_name and profile.browser_type == browser_type:
                     return profile
             
-            return None
+            # Raise exception if profile not found
+            raise ProfileException(f"Profile '{profile_name}' not found for browser type '{browser_type.value}'", 404)
             
+        except ProfileException:
+            # Re-raise profile exceptions
+            raise
         except Exception as e:
             logger.error(f"Error getting profile by name: {e}")
-            return None
+            raise ProfileException(f"Failed to retrieve profile '{profile_name}': {str(e)}", 500)
     
     async def get_default_profile(self, browser_type: BrowserType) -> Optional[BrowserProfile]:
         """Get the default profile for a browser type"""
         try:
             profiles_response = await self.get_available_profiles(browser_type)
             
+            # First, look for explicitly marked default profiles
             for profile in profiles_response.profiles:
                 if profile.browser_type == browser_type and profile.is_default:
                     return profile
             
+            # If no default found, return the first available profile for this browser type
             for profile in profiles_response.profiles:
                 if profile.browser_type == browser_type:
                     return profile
             
-            return None
+            # If no profiles found at all, raise exception
+            raise ProfileException(f"No profiles found for browser type '{browser_type.value}'", 404)
             
+        except ProfileException:
+            # Re-raise profile exceptions
+            raise
         except Exception as e:
             logger.error(f"Error getting default profile: {e}")
-            return None
+            raise ProfileException(f"Failed to retrieve default profile for '{browser_type.value}': {str(e)}", 500)
     
     async def validate_profile_exists(self, profile_name: str, browser_type: BrowserType) -> bool:
         """Validate if a profile exists"""
         try:
-            profile = await self.get_profile_by_name(profile_name, browser_type)
-            return profile is not None
+            await self.get_profile_by_name(profile_name, browser_type)
+            return True
+        except ProfileException as e:
+            if e.status_code == 404:
+                return False
+            # Re-raise non-404 exceptions
+            raise
         except Exception as e:
             logger.error(f"Error validating profile exists: {e}")
-            return False 
+            raise ProfileException(f"Failed to validate profile '{profile_name}': {str(e)}", 500) 

@@ -1,8 +1,8 @@
 from src.services.email_service import EmailService
 from src.services.profile_service import ProfileService
 from src.schemas.browser import BrowserConfig
-from src.schemas.enums import BrowserType
-from src.utils.logger import get_logger
+from core.enums import BrowserType
+from src.core.logger import get_logger
 
 logger = get_logger(__name__)
 

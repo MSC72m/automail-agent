@@ -21,10 +21,12 @@ def is_wsl() -> bool:
             with open('/proc/version', 'r') as f:
                 version_info = f.read().lower()
                 return 'microsoft' in version_info or 'wsl' in version_info
+        return 
     except Exception as e:
         logger.debug(f"Error checking /proc/version: {e}")
     
-    return os.environ.get('WSL_DISTRO_NAME') is not None or os.environ.get('IS_WSL') == 'true'
+    # Fallback: check for WSL environment variables
+    return os.environ.get('WSL_DISTRO_NAME') is not None
 
 
 def get_windows_username() -> Optional[str]:

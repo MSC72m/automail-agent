@@ -2,29 +2,27 @@ import uvicorn
 import sys
 import os
 
-# Add project root to path
-project_root = os.path.dirname(os.path.abspath(__file__))
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
+# Add project root to path for imports
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
+from src.core.logger import setup_logging, get_logger
+from src.app import create_app
 from src.schemas.config import config
-from src.utils.logger import setup_logging, get_logger
 
 def main():
     """Main entry point for the AutoMail Agent application."""
-    # Setup logging first
     setup_logging()
     logger = get_logger(__name__)
     
     logger.info("🚀 Starting AutoMail Agent...")
-    print("=" * 50)
-    print("📧 AutoMail Agent - Gmail Automation Web Interface")
-    print(f"🌐 Web Interface: http://{config.host}:{config.port}")
-    print(f"📚 API Documentation: http://{config.host}:{config.port}/docs")
-    print(f"🔍 Health Check: http://{config.host}:{config.port}/health")
-    print(f"🔧 Environment: {config.environment.value}")
-    print(f"📊 Log Level: {config.log_level.value}")
-    print("=" * 50)
+    logger.info("=" * 50)
+    logger.info("📧 AutoMail Agent - Gmail Automation Web Interface")
+    logger.info(f"🌐 Web Interface: http://{config.host}:{config.port}")
+    logger.info(f"📚 API Documentation: http://{config.host}:{config.port}/docs")
+    logger.info(f"🔍 Health Check: http://{config.host}:{config.port}/health")
+    logger.info(f"🔧 Environment: {config.environment.value}")
+    logger.info(f"📊 Log Level: {config.log_level.value}")
+    logger.info("=" * 50)
     
     try:
         uvicorn.run(
