@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Headless mode (default) - for server environments
   automail-headless:
@@ -7,7 +5,8 @@ services:
       context: .
       network: host
     container_name: automail-agent-headless
-    network_mode: host
+    ports:
+      - "8000:8000"
     volumes:
       # Data persistence (basic mounts, browsers will be added by setup script)
       - ./logs:/home/app/logs
@@ -27,7 +26,8 @@ services:
       context: .
       target: development
       network: host
-    network_mode: host
+    ports:
+      - "8000:8000"
     volumes:
       - .:/app
     environment:

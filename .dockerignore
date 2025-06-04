@@ -48,10 +48,6 @@ Thumbs.db
 .git/
 .gitignore
 
-# Logs
-logs/
-*.log
-
 # Testing
 .pytest_cache/
 .coverage

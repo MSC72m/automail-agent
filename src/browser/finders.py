@@ -6,6 +6,7 @@ from src.browser.interfaces.finders_interfaces import IBrowserFinder
 from src.schemas.browser import BrowserConfig
 from src.schemas.enums import BrowserType, OSType
 from src.utils.logger import get_logger
+from src.utils.wsl_helper import is_wsl
 
 logger = get_logger(__name__)
 
@@ -20,6 +21,7 @@ class BaseBrowserFinder(IBrowserFinder):
         """Find the browser executable path."""
         for path in self.get_possible_paths():
             if os.path.exists(path):
+                logger.info(f"Found browser executable: {path}")
                 return path
         return None
     
@@ -34,12 +36,39 @@ class ChromeFinder(BaseBrowserFinder):
     def get_possible_paths(self) -> List[str]:
         """Get possible Chrome executable paths."""
         if self.config.os_type == OSType.LINUX:
-            possible_paths = [
+            possible_paths = []
+            
+            # First, try to get Playwright's Chromium path
+            try:
+                from playwright.sync_api import sync_playwright
+                p = sync_playwright().start()
+                playwright_chromium = p.chromium.executable_path
+                p.stop()
+                if os.path.exists(playwright_chromium):
+                    possible_paths.append(playwright_chromium)
+                    logger.debug(f"Found Playwright Chromium: {playwright_chromium}")
+            except Exception as e:
+                logger.debug(f"Could not get Playwright Chromium path: {e}")
+            
+            # Standard Linux Chrome paths
+            linux_chrome_paths = [
                 "/usr/bin/google-chrome",
                 "/usr/bin/google-chrome-stable",
                 "/usr/local/bin/google-chrome",
                 "/snap/bin/google-chrome",
             ]
+            possible_paths.extend(linux_chrome_paths)
+            
+            # Check if we're in a WSL/Docker environment and add Windows browser paths
+            # Note: These are only useful if we can actually execute them (e.g., with Wine)
+            if os.environ.get('IS_WSL') == 'true' or is_wsl():
+                windows_chrome_paths = [
+                    "/mnt/c/Program Files/Google/Chrome/Application/chrome.exe",
+                    "/mnt/c/Program Files (x86)/Google/Chrome/Application/chrome.exe",
+                ]
+                # Only add Windows paths if they exist and we can execute them
+                # For now, we'll skip Windows executables in Linux containers
+                # possible_paths.extend(windows_chrome_paths)
             
             try:
                 # Check if google-chrome is installed in the system
@@ -47,9 +76,9 @@ class ChromeFinder(BaseBrowserFinder):
                 if result.returncode == 0:
                     chrome_path = result.stdout.strip()
                     if chrome_path and chrome_path not in possible_paths:
-                        possible_paths.insert(0, chrome_path)
+                        possible_paths.insert(-1, chrome_path)  # Insert before Playwright as fallback
             except subprocess.CalledProcessError:
-                logger.warning("Warning: Could not find Chrome executable path")
+                logger.debug("Could not find Chrome executable via 'which' command")
             
             return possible_paths
             
@@ -69,12 +98,27 @@ class FirefoxFinder(BaseBrowserFinder):
     def get_possible_paths(self) -> List[str]:
         """Get possible Firefox executable paths."""
         if self.config.os_type == OSType.LINUX:
-            return [
+            possible_paths = [
                 "/usr/bin/firefox",
                 "/usr/bin/firefox-esr",
                 "/usr/local/bin/firefox",
                 "/snap/bin/firefox",
             ]
+            
+            # Check if we're in a WSL/Docker environment and add Windows browser paths
+            is_wsl_env = os.environ.get('IS_WSL') == 'true' or is_wsl()
+            if is_wsl_env:
+                # Add Windows Firefox paths that might be mounted in Docker
+                windows_firefox_paths = [
+                    "/usr/bin/firefox.exe",  # Mounted Windows Firefox
+                    "/mnt/c/Program Files/Mozilla Firefox/firefox.exe",
+                    "/mnt/c/Program Files (x86)/Mozilla Firefox/firefox.exe",
+                ]
+                # Add Windows paths at the beginning for priority
+                possible_paths = windows_firefox_paths + possible_paths
+            
+            return possible_paths
+            
         elif self.config.os_type == OSType.WINDOWS:
             return [
                 os.path.expandvars(r"%ProgramFiles%\Mozilla Firefox\firefox.exe"),

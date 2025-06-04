@@ -14,21 +14,26 @@ class LoggerManager:
         self._setup_complete = False
     
     def setup_logging(self) -> None:
-        """Setup logging configuration once."""
+        """Setup logging configuration."""
         if self._setup_complete:
             return
         
-        log_file_path = Path(config.log_file.split("/")[0])
-        log_file_path.parent.mkdir(parents=True, exist_ok=True)
+        # Import config here to avoid circular imports
+            
+        # Create logs directory if it doesn't exist
+        log_dir = os.path.dirname(config.log_file)
+        if log_dir and not os.path.exists(log_dir):
+            os.makedirs(log_dir, exist_ok=True)
         
-        # Configure root logger
+        log_file = os.path.join(log_dir, "automail.log")
+        
         logging.basicConfig(
             level=getattr(logging, config.log_level.value),
             format=config.log_format,
             datefmt=config.log_date_format,
             handlers=[
                 logging.StreamHandler(sys.stdout),
-                logging.FileHandler(config.log_file, encoding='utf-8')
+                logging.FileHandler(log_file, encoding='utf-8')
             ],
             force=True  
         )
