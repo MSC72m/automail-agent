@@ -575,13 +575,6 @@ class GmailMailer(IMailer):
             logger.error(f"❌ Error sending email: {e}")
             return False
     
-    async def close(self):
-        """Close the browser connection."""
-        if self.launcher:
-            await self.launcher.close()
-            self._is_connected = False
-            logger.info("✅ Disconnected from Gmail")
-    
     async def terminate(self) -> bool:
         """Terminate the browser completely."""
         try:
@@ -607,5 +600,6 @@ class GmailMailer(IMailer):
     
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """Async context manager exit."""
-        await self.terminate()
-
+        if not await self.terminate():
+            logger.error("❌ Failed to terminate browser")
+            raise RuntimeError("Failed to terminate browser")

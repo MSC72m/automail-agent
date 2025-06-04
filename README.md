@@ -1,10 +1,10 @@
 # AutoMail Agent
 
-A beautiful web interface for sending emails through Gmail automation using browser sessions.
+A beautiful web interface for sending emails through Gmail automation using your existing browser sessions via **Chrome DevTools Protocol (CDP)**.
 
-## Quick Start
+## ⚡ Quick Start
 
-### 1. Setup
+### Native Setup
 ```bash
 # Linux/Mac
 ./setup.sh
@@ -13,172 +13,193 @@ A beautiful web interface for sending emails through Gmail automation using brow
 setup.bat
 ```
 
-### 2. Run
+### Docker Setup
 ```bash
-# Activate virtual environment first
-source venv/bin/activate  # Linux/Mac
-# or
-venv\Scripts\activate.bat  # Windows
+# Essential: Detects your browsers and profiles
+./setup-docker.sh
 
-# Then run the application
+# Start application
+docker-compose up --build
+```
+
+### Run
+```bash
+# Activate environment
+source venv/bin/activate  # Linux/Mac
+# venv\Scripts\activate.bat  # Windows
+
+# Start application
 python3 -m main
 ```
 
-Visit `http://localhost:8000` to use the web interface or send API requests.
+Visit `http://localhost:8000` for the web interface.
 
-## Features
+## 🎯 How It Works
 
-- **Web Interface**: Clean, modern UI for sending emails
+### Chrome DevTools Protocol (CDP)
+AutoMail Agent uses **CDP** to communicate with your browser instances. CDP is a debugging protocol that allows external applications to:
+- Connect to running browser instances
+- Control page navigation and interactions
+- Execute JavaScript and DOM manipulation
+- Reuse existing authentication sessions
+
+This eliminates the need for storing Gmail credentials - we simply reuse your existing logged-in browser sessions.
+
+### Detailed Process Flow
+1. **System Detection**: Scans system for browser executables and profile directories
+2. **Profile Isolation**: Creates temporary profile copies to avoid corrupting active sessions
+3. **Browser Launch**: Starts browser with CDP debugging enabled (`--remote-debugging-port=9222`)
+4. **Security Bypass**: Disables browser security features that block automation
+5. **CDP Connection**: Playwright connects to the debug port for browser control
+6. **Session Authentication**: Leverages existing Gmail cookies and session data
+7. **DOM Navigation**: Automated interaction with Gmail's web interface
+8. **Email Composition**: Fills recipient, subject, and body fields programmatically
+9. **Send Execution**: Triggers Gmail's send mechanism via JavaScript
+10. **Clean Termination**: Closes browser, cleans temporary profiles, releases ports
+
+## 📋 Platform Support
+
+| Platform | Chrome | Firefox | Docker | Notes |
+|----------|--------|---------|--------|-------|
+| **Linux** | ✅ Full | ⚠️ Basic | ✅ Recommended | Best support |
+| **Windows** | ❌ Broken | ❌ Broken | ❌ Limited | **Does not work yet** |
+| **WSL** | ⚠️ Limited | ❌ Basic | ⚠️ Complex | Use Docker with caution |
+
+### Known Limitations
+- **Windows**: Native Windows support is **completely broken** due to incomplete subprocess method implementations for process management
+- **Firefox**: Basic support only - not fully tested across all email scenarios
+- **Docker**: Incomplete implementation, overly complicated setup process
+- **WSL Users**: Docker setup is **especially difficult** - Chrome support very limited
+- **Attachments**: Not currently supported
+
+## 🛠️ Setup Methods
+
+### `setup-docker.sh` - Essential but Complex
+
+The Docker setup script performs critical system detection but has limitations:
+
+```bash
+./setup-docker.sh
+```
+
+**What it does:**
+- **Dynamic Browser Detection**: Finds installed browsers (Chrome, Firefox, Edge)
+- **Profile Path Discovery**: Locates your browser profiles for session reuse
+- **Creates `docker-compose.override.yml`**: Dynamically generates Docker volume mounts
+- **Cross-Platform Compatibility**: Handles Linux, WSL, and Docker environments
+- **WSL Integration**: Attempts to detect Windows browsers (with limited success)
+
+**Docker Limitations:**
+- **Incomplete Implementation**: Many features don't work properly in containers
+- **Complex Setup**: Requires manual intervention for WSL environments
+- **Chrome Restrictions**: Limited Chrome functionality in Docker, especially on WSL
+- **Profile Mounting Issues**: Browser profiles often have permission conflicts in containers
+
+**Without this script**, Docker containers can't access your browser profiles or executables, making email automation impossible.
+
+### Standard Setup Scripts
+- `setup.sh` / `setup.bat`: Creates virtual environment and installs dependencies
+- **Linux recommended**: Works best on native Linux installations
+- **Windows users**: Currently no working solution available
+
+## 🚧 Technical Challenges
+
+### Browser Instance Control
+- **Process Hijacking**: Taking control of running browser instances without disrupting user sessions
+- **Port Conflicts**: Managing CDP debug ports when multiple browser instances exist
+- **Profile Locking**: Browsers lock profile directories, requiring careful copying/isolation
+- **Instance Detection**: Identifying which browser processes belong to which profiles
+
+### Security Circumvention
+- **Same-Origin Policy**: Bypassing browser security to inject automation scripts
+- **CSRF Protection**: Working around Gmail's CSRF tokens and security headers
+- **Automation Detection**: Evading Gmail's bot detection mechanisms
+- **Headless Limitations**: Many security features break in headless mode, forcing visible browser use
+
+### Process Management
+- **Windows Subprocess**: Windows process creation flags completely different from Unix
+- **Browser Lifecycle**: Properly starting, monitoring, and terminating browser processes
+- **Zombie Processes**: Preventing orphaned browser processes from consuming resources
+- **Signal Handling**: Cross-platform process termination requires different approaches
+
+### Profile Handling
+- **Permission Issues**: Browser profiles have strict file system permissions
+- **Session Corruption**: Risk of corrupting active user sessions during profile copying
+- **Database Locks**: Chrome/Firefox use SQLite databases that can't be copied while locked
+- **Cross-Platform Paths**: Profile locations vary dramatically between operating systems
+
+### Browser Compatibility
+- **Firefox CDP**: Firefox's CDP implementation is incomplete compared to Chrome
+- **Version Compatibility**: Different browser versions have varying CDP feature support
+- **Extension Conflicts**: Browser extensions can interfere with automation scripts
+- **Update Interference**: Browser auto-updates can break automation compatibility
+
+## 🚀 Features
+
+- **Web Interface**: Clean, modern UI for composing emails
 - **API Endpoints**: RESTful API for programmatic access
-- **Browser Automation**: Uses your existing Gmail sessions with Playwright
-- **Profile Management**: Automatically detects browser profiles
-- **No Credentials**: Leverages existing browser sessions
+- **Profile Management**: Automatic browser profile detection
+- **Session Reuse**: No credential storage needed
+- **Cross-Platform**: Linux support only (Windows planned but broken)
 
-## How It Works
+## 📁 Project Structure
 
-1. **Profile Detection**: Automatically finds your Chrome/Firefox profiles
-2. **Session Reuse**: Uses your existing Gmail login sessions
-3. **Browser Automation**: Launches browser with Playwright, navigates Gmail
-4. **Email Sending**: Fills compose form and sends email
-5. **Clean Isolation**: Each operation uses temporary profiles
+```
+automail-agent/
+├── src/
+│   ├── browser/          # Browser automation core
+│   │   ├── lunchers.py   # CDP connection & process management
+│   │   ├── mailer.py     # Gmail interface automation
+│   │   ├── finders.py    # Browser detection
+│   │   └── profile_manager.py
+│   ├── routes/           # FastAPI endpoints
+│   ├── services/         # Business logic
+│   ├── schemas/          # Data models
+│   └── static/           # Web UI assets
+├── setup.sh / setup.bat  # Native setup
+├── setup-docker.sh      # Docker environment setup
+└── docker-compose.yml   # Container orchestration
+```
 
-## Web Interface
-
-Access the web interface at `http://localhost:8000`:
-
-- **Send Email**: Simple form to compose and send emails
-- **Profile Selection**: Choose from detected browser profiles
-- **Headless Mode**: Option to run browser in background
-- **Real-time Feedback**: Status updates and error messages
-
-## API Usage
+## 🔧 API Usage
 
 ### Send Email
 ```bash
 curl -X POST http://localhost:8000/send-email \
   -F "to=recipient@example.com" \
   -F "subject=Test Email" \
-  -F "body=Hello from AutoMail Agent!" \
+  -F "body=Hello from AutoMail!" \
   -F "headless=true" \
-  -F "browser_name=chrome" \
-  -F "profile_name=Profile 1"
+  -F "browser_name=chrome"
 ```
 
-### Get Browser Profiles
+### Get Profiles
 ```bash
 curl http://localhost:8000/profiles/chrome
 ```
 
-### Health Check
+## 🐳 Docker Development
+
 ```bash
-curl http://localhost:8000/health
-```
-
-## Browser Profile Detection
-
-Profiles are automatically detected from:
-- **Chrome**: `~/.config/google-chrome/` (Linux), `%LOCALAPPDATA%\Google\Chrome\User Data` (Windows)
-- **Firefox**: `~/.mozilla/firefox/` (Linux), `%APPDATA%\Mozilla\Firefox\Profiles` (Windows)
-
-## Project Structure
-
-```
-automail-agent/
-├── main.py                 # Application entry point
-├── requirements.txt        # Python dependencies
-├── setup.sh               # Linux/Mac setup script
-├── setup.bat              # Windows setup script
-├── start.sh               # Linux/Mac start script (created by setup)
-├── start.bat              # Windows start script (created by setup)
-├── .env.example           # Environment variables template
-├── docker-compose.yml     # Docker configuration
-├── Dockerfile             # Docker image definition
-├── src/                   # Source code
-│   ├── app.py            # FastAPI application
-│   ├── dependencies.py   # Dependency injection
-│   ├── routes/           # API endpoints
-│   │   ├── email_routes.py
-│   │   └── profile_routes.py
-│   ├── services/         # Business logic
-│   │   ├── email_service.py
-│   │   └── profile_service.py
-│   ├── browser/          # Browser automation
-│   │   ├── lunchers.py   # Browser launcher
-│   │   ├── mailer.py     # Gmail automation
-│   │   ├── finders.py    # Browser detection
-│   │   └── profile_manager.py
-│   ├── schemas/          # Data models and configuration
-│   │   ├── config.py     # Application configuration
-│   │   ├── browser.py    # Browser configuration
-│   │   ├── email.py      # Email models
-│   │   └── enums.py      # Enumerations
-│   ├── static/           # Static files (CSS, JS)
-│   ├── templates/        # Jinja2 templates
-│   │   └── index.html
-│   ├── utils/            # Utilities and logging
-│   │   └── logger.py
-│   └── agents/           # Agent implementations
-└── venv/                 # Virtual environment (created by setup)
-```
-
-## Requirements
-
-- Python 3.8+
-- Chrome or Firefox browser
-- Gmail account (must be logged in to browser)
-
-## Setup Details
-
-The setup scripts automatically:
-- Create a Python virtual environment
-- Install all Python dependencies including Playwright
-- Set up proper permissions for browser automation
-- Create start scripts for easy launching
-
-## Docker Support
-
-### Quick Docker Setup
-```bash
-# Setup browser detection (required)
-./setup-docker.sh
-
-# Start application
-docker-compose up --build
-
-# Development mode with live reload
+# Development with live reload
 docker-compose --profile dev up automail-dev
+
+# Production mode
+docker-compose up automail-headless
 ```
 
-### Why setup-docker.sh?
+**Note**: Docker implementation is incomplete and especially problematic for WSL users.
 
-The setup script is essential because:
-- **Dynamic Detection**: Finds browsers installed on your system
-- **Profile Mounting**: Locates your browser profiles for session reuse
-- **Compatibility**: Works across different Linux distributions and setups
-- **Error Prevention**: Only mounts what exists, preventing Docker errors
+## ⚠️ Troubleshooting
 
-## Development
+- **"No profiles found"**: Ensure you're logged into Gmail in your browser
+- **"Browser timeout"**: Check internet connection and Gmail login status  
+- **"Permission errors"**: Re-run setup scripts or check profile directory permissions
+- **"CDP connection failed"**: Verify no other applications are using the debug port
+- **WSL Docker issues**: Consider using native Linux instead of WSL + Docker
 
-### Running in Development Mode
-```bash
-# Activate virtual environment
-source venv/bin/activate
+---
 
-# Run the application
-python3 -m main
-```
-
-## Troubleshooting
-
-### Common Issues
-
-1. **"Module not found"**: Make sure virtual environment is activated (`source venv/bin/activate`)
-2. **No profiles found**: Ensure Chrome/Firefox is installed and you're logged into Gmail
-3. **Browser timeout**: Check your internet connection and Gmail login status
-4. **Permission errors**: Re-run setup script or ensure browser profile directories are readable
-5. **Playwright browser not found**: Run `playwright install` in activated virtual environment
-
-### Logs
-
-Application logs are automatically created in the `logs/` directory when the application starts.
+**Requirements**: Python 3.8+, Chrome browser (Linux only), Gmail account (logged in)  
+**Status**: ⚠️ **Linux only** - Windows support broken, Docker incomplete
 

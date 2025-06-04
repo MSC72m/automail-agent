@@ -14,7 +14,7 @@ class BrowserType(StrEnum):
     CHROME = "chrome"
     FIREFOX = "firefox"
 
-class LogLevel(str, Enum):
+class LogLevel(StrEnum):
     """Log level enumeration."""
     DEBUG = "DEBUG"
     INFO = "INFO"
@@ -22,7 +22,7 @@ class LogLevel(str, Enum):
     ERROR = "ERROR"
     CRITICAL = "CRITICAL"
 
-class Environment(str, Enum):
+class Environment(StrEnum):
     """Environment enumeration."""
     DEVELOPMENT = "development"
     PRODUCTION = "production"

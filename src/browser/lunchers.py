@@ -359,7 +359,7 @@ class BrowserLauncher(IBrowserLauncher):
                 self._browser_process.kill()
                 self._browser_process.wait()
             except:
-                pass
+                logger.error("❌ Failed to terminate browser")
             finally:
                 self._browser_process = None
         

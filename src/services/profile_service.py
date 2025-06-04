@@ -45,7 +45,6 @@ class ProfileService(ProfileServiceInterface):
                     logger.warning(f"Error getting profiles for {bt}: {e}")
                     continue
             
-            # If no profiles found, create default ones
             if not profiles:
                 for bt in browser_types:
                     default_profile = BrowserProfile(
@@ -75,11 +74,9 @@ class ProfileService(ProfileServiceInterface):
                 if profile.name == profile_name and profile.browser_type == browser_type:
                     return profile
             
-            # Raise exception if profile not found
             raise ProfileException(f"Profile '{profile_name}' not found for browser type '{browser_type.value}'", 404)
             
         except ProfileException:
-            # Re-raise profile exceptions
             raise
         except Exception as e:
             logger.error(f"Error getting profile by name: {e}")
@@ -90,21 +87,17 @@ class ProfileService(ProfileServiceInterface):
         try:
             profiles_response = await self.get_available_profiles(browser_type)
             
-            # First, look for explicitly marked default profiles
             for profile in profiles_response.profiles:
                 if profile.browser_type == browser_type and profile.is_default:
                     return profile
             
-            # If no default found, return the first available profile for this browser type
             for profile in profiles_response.profiles:
                 if profile.browser_type == browser_type:
                     return profile
             
-            # If no profiles found at all, raise exception
             raise ProfileException(f"No profiles found for browser type '{browser_type.value}'", 404)
             
         except ProfileException:
-            # Re-raise profile exceptions
             raise
         except Exception as e:
             logger.error(f"Error getting default profile: {e}")
@@ -118,7 +111,6 @@ class ProfileService(ProfileServiceInterface):
         except ProfileException as e:
             if e.status_code == 404:
                 return False
-            # Re-raise non-404 exceptions
             raise
         except Exception as e:
             logger.error(f"Error validating profile exists: {e}")

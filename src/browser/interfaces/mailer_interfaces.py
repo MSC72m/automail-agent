@@ -10,4 +10,7 @@ class IMailer(ABC):
     @abstractmethod
     def connect_to_gmail(self) -> bool:
         pass
-    
+
+    @abstractmethod
+    def terminate(self) -> bool:
+        pass
