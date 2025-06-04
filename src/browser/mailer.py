@@ -9,7 +9,7 @@ from src.browser.interfaces.mailer_interfaces import IMailer
 from src.browser.lunchers import BrowserLauncher
 from src.schemas.browser import BrowserConfig
 from src.schemas.email import EmailInput
-from core.enums import BrowserType
+from src.core.enums import BrowserType
 from src.schemas.config import config
 
 logger = get_logger(__name__)

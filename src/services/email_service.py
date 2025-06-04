@@ -6,7 +6,7 @@ from src.services.interfaces.email_interface import EmailServiceInterface
 from src.schemas.email import EmailRequest, EmailResponse
 from src.schemas.browser import BrowserConfig
 from src.schemas.email import EmailInput
-from core.enums import BrowserType
+from src.core.enums import BrowserType
 from src.browser.mailer import GmailMailer
 from src.core.logger import get_logger
 from src.core.exceptions import (

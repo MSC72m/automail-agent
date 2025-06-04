@@ -6,7 +6,6 @@ import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from src.core.logger import setup_logging, get_logger
-from src.app import create_app
 from src.schemas.config import config
 
 def main():

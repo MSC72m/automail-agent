@@ -2,7 +2,7 @@ from typing import Optional
 
 from src.services.interfaces.profile_interface import ProfileServiceInterface
 from src.schemas.profile import BrowserProfile, ProfileListResponse
-from core.enums import BrowserType
+from src.core.enums import BrowserType
 from src.schemas.browser import BrowserConfig
 from src.browser.profile_manager import ProfileManager
 from src.core.logger import get_logger

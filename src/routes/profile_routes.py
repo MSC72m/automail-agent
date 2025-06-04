@@ -3,7 +3,7 @@ from typing import Optional
 
 from src.schemas.profile import ProfileListResponse, BrowserProfile
 from src.services.profile_service import ProfileService
-from core.enums import BrowserType
+from src.core.enums import BrowserType
 from src.core.dependencies import get_profile_service
 from src.core.exceptions import ProfileException
 

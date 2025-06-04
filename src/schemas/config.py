@@ -1,7 +1,8 @@
 from pydantic import Field
 from pydantic_settings import BaseSettings
+from typing import Optional
 
-from core.enums import LogLevel, Environment
+from src.core.enums import LogLevel, Environment
 
 
 class AppConfig(BaseSettings):
@@ -29,6 +30,8 @@ class AppConfig(BaseSettings):
         default="%Y-%m-%d %H:%M:%S",
         description="Log date format"
     )
+    log_file: Optional[str] = Field(default="logs/automail.log", description="Log file path")
+
     # Browser Configuration
     browser_timeout: int = Field(default=30000, description="Browser timeout in milliseconds")
     headless: bool = Field(default=False, description="Run browser in headless mode")

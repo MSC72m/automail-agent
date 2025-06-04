@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
 from src.schemas.profile import BrowserProfile, ProfileListResponse
-from core.enums import BrowserType
+from src.core.enums import BrowserType
 
 class ProfileServiceInterface(ABC):
     """Abstract interface for profile services"""

@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional
 
-from core.enums import BrowserType
+from src.core.enums import BrowserType
 
 class BrowserProfile(BaseModel):
     """Browser profile model"""

@@ -4,7 +4,7 @@ import os
 import platform
 
 from src.core.wsl_helper import is_wsl
-from core.enums import BrowserType, OSType
+from src.core.enums import BrowserType, OSType
 
 class BrowserConfig(BaseModel):
     """Configuration for browser automation."""

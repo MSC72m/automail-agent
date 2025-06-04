@@ -4,7 +4,7 @@ from typing import List
 
 from src.browser.interfaces.profile_manager_interfaces import IProfileManager
 from src.schemas.browser import BrowserConfig
-from core.enums import BrowserType, OSType
+from src.core.enums import BrowserType, OSType
 from src.core.logger import get_logger
 from src.core.wsl_helper import is_wsl
 

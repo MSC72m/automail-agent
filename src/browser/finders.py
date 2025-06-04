@@ -1,12 +1,13 @@
 import os
-import platform
 import subprocess
 from typing import Optional, List
+from playwright.sync_api import sync_playwright
 
 from src.core.logger import get_logger
 from src.core.wsl_helper import is_wsl
 from src.schemas.browser import BrowserConfig
-from core.enums import BrowserType, OSType
+from src.core.enums import BrowserType, OSType
+from src.browser.interfaces.finders_interfaces import IBrowserFinder
 
 logger = get_logger(__name__)
 
@@ -29,7 +30,6 @@ class BaseBrowserFinder(IBrowserFinder):
         """Get possible paths for the browser executable."""
         raise NotImplementedError("Subclasses must implement get_possible_paths")
 
-
 class ChromeFinder(BaseBrowserFinder):
     """Chrome browser finder."""
     
@@ -38,9 +38,7 @@ class ChromeFinder(BaseBrowserFinder):
         if self.config.os_type == OSType.LINUX:
             possible_paths = []
             
-            # First, try to get Playwright's Chromium path
             try:
-                from playwright.sync_api import sync_playwright
                 p = sync_playwright().start()
                 playwright_chromium = p.chromium.executable_path
                 p.stop()

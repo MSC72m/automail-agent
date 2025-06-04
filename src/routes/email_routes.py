@@ -7,7 +7,7 @@ from src.services.email_service import EmailService
 from src.services.profile_service import ProfileService
 from src.schemas.email import EmailRequest, EmailResponse
 from src.schemas.browser import BrowserConfig
-from core.enums import BrowserType
+from src.core.enums import BrowserType
 from src.core.dependencies import get_email_service, get_profile_service
 from src.core.logger import get_logger
 from src.core.exceptions import (
